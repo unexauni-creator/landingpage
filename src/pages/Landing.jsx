@@ -292,10 +292,10 @@ function useScrolled(threshold = 8) {
   return scrolled;
 }
 
-function NavLink({ item, isActive }) {
+function NavLink({ item, isActive, onClick }) {
   const linkClass = isActive ? "landing-nav-link is-active" : "landing-nav-link";
   return (
-    <a href={"#" + item.id} className={linkClass}>
+    <a href={"#" + item.id} className={linkClass} onClick={onClick}>
       {item.label}
     </a>
   );
@@ -307,6 +307,7 @@ export default function Landing() {
   const [processCardsRef, activeStep] = useActiveIndex(PROCESS_STEPS.length);
   const [heyRef, heyVisible] = useInViewFade();
   const [footerRef, footerVisible] = useInViewFade();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
 
   const navIds = NAV_ITEMS.map(function (n) {
@@ -333,6 +334,10 @@ export default function Landing() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function closeMobileNav() {
+    setMobileNavOpen(false);
+  }
+
   return (
     <div className="landing-page">
       <div className="scroll-progress-bar" style={{ transform: `scaleX(${docProgress})` }} />
@@ -340,12 +345,44 @@ export default function Landing() {
       <header className="landing-nav">
         <div className={navPillClass}>
           <img src="/Unexa Logo.svg" alt="Unexa" className="landing-logo-img" />
+
           <nav className="landing-nav-links">
             {NAV_ITEMS.map(function (item) {
               return <NavLink key={item.id} item={item} isActive={activeSection === item.id} />;
             })}
           </nav>
+
           <a href="#launch" className="landing-nav-cta">
+            Join waitlist <span aria-hidden="true">↗</span>
+          </a>
+
+          <button
+            type="button"
+            className={`landing-nav-hamburger${mobileNavOpen ? " is-open" : ""}`}
+            onClick={() => setMobileNavOpen((v) => !v)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileNavOpen}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
+
+        <div className={`landing-nav-mobile-panel${mobileNavOpen ? " is-open" : ""}`}>
+          <nav className="landing-nav-mobile-links">
+            {NAV_ITEMS.map(function (item) {
+              return (
+                <NavLink
+                  key={item.id}
+                  item={item}
+                  isActive={activeSection === item.id}
+                  onClick={closeMobileNav}
+                />
+              );
+            })}
+          </nav>
+          <a href="#launch" className="landing-nav-mobile-cta" onClick={closeMobileNav}>
             Join waitlist <span aria-hidden="true">↗</span>
           </a>
         </div>
@@ -371,7 +408,27 @@ export default function Landing() {
         ))}
       </section>
 
-      
+      <section className={`landing-showcase${showcaseVisible ? " is-visible" : ""}`} ref={showcaseRef} id="showcase">
+        <div className="showcase-left">
+          <div className="landing-hero-eyebrow showcase-eyebrow">About Unexa</div>
+          <h2 className="showcase-title">
+            Built for students
+            <br />
+            still figuring out
+            <br />
+            <span className="landing-hero-accent">✳</span> where to study next
+          </h2>
+          <p className="showcase-sub">
+            We're building a way to discover <span className="landing-pill">design & art programs</span> across
+            Europe, compare them side by side, and plan every step — application deadlines, portfolio prep, and beyond.
+          </p>
+        </div>
+
+        <div className="showcase-card">
+          <img src={SHOWCASE_IMAGE} alt="" className="showcase-card-img" />
+        </div>
+      </section>
+
       <section className="research-zoom-section" ref={zoomRef} id="research">
         <div className="research-zoom-sticky">
           <div className="research-zoom-fade">
