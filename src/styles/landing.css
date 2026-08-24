@@ -176,10 +176,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   to { transform: rotate(360deg); }
 }
 
+/* Plain black description text — no pill/underline styling here. */
 .landing-hero-desc {
   font-family: 'Nunito', sans-serif;
   font-size: 19px;
-  color: #4a3f38;
+  color: #1a1512;
   line-height: 2;
   max-width: 620px;
   margin: 0 auto;
@@ -641,8 +642,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   transform: scale(1.02);
 }
 
-/* ── Team ("Hey!") section — extra top margin now separates it clearly
-   from Process above, and the whole section fades + rises into view. ── */
+/* ── Team ("Hey!") section ── */
 .hey-section {
   max-width: 1160px;
   width: 100%;
@@ -771,9 +771,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   transform: translateY(-2px);
 }
 
-/* ── Footer — extra top margin separates it from Team above; the
-   whole block fades + rises in, and the CTA/bottom-row content inside
-   it staggers slightly after that so it doesn't feel flat. ── */
+/* ── Footer ── */
 .landing-footer {
   max-width: 1160px;
   width: 100%;

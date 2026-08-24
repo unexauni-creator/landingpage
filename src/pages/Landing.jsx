@@ -353,13 +353,13 @@ export default function Landing() {
 
       <section className="landing-hero">
         <h1 className="landing-hero-title">
-          Built for students still 
+          Built for students still <span className="landing-hero-accent">✳</span>
           <br />
-          <span className="landing-hero-accent">✳</span>figuring out where to study next
+          figuring out where to study next
         </h1>
         <p className="landing-hero-desc">
-         <span className="landing-pill">We're building a way to discover design & art programs across the world, compare them side by side, and plan every step — application deadlines, portfolio prep, and beyond.</span> 
-          
+          We're building a way to discover design & art programs across the world, compare them
+          side by side, and plan every step — application deadlines, portfolio prep, and beyond.
         </p>
       </section>
 
@@ -372,7 +372,6 @@ export default function Landing() {
       </section>
 
       
-
       <section className="research-zoom-section" ref={zoomRef} id="research">
         <div className="research-zoom-sticky">
           <div className="research-zoom-fade">
