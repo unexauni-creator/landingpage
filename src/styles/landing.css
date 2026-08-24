@@ -142,9 +142,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   transform: translateY(0);
 }
 
-/* Hamburger — hidden by default, shown only below the tablet breakpoint.
-   When visible, it takes the CTA's place on the right — the CTA button
-   moves inside the dropdown panel instead of sitting in the bar. */
+/* Hamburger — hidden by default, shown only below the tablet breakpoint. */
 .landing-nav-hamburger {
   display: none;
   flex-direction: column;
@@ -1031,9 +1029,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* Hamburger takes over from this breakpoint down: links AND the CTA
-   button both disappear from the visible bar — only the logo and the
-   hamburger icon remain, matching a true collapsed mobile nav. */
+/* Hamburger takes over from this breakpoint down */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -1050,8 +1046,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     gap: 0;
   }
 
-  /* Process section: title stays pinned near the top of the viewport
-     while media cards scroll and pin beneath it one at a time. */
   .process-section {
     grid-template-columns: 1fr;
     gap: 0;
@@ -1089,8 +1083,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .landing-hero-title { font-size: 30px; margin-bottom: 18px; }
   .landing-hero-desc { font-size: 15px; }
 
-  /* Fan cards: viewport-relative sizing guarantees all four always
-     fit on one row edge-to-edge, regardless of exact device width. */
   .landing-cards-fan {
     padding: 16px 4vw 48px;
     flex-wrap: nowrap;
@@ -1141,14 +1133,32 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-section { margin-top: 90px; padding: 56px 16px; }
   .hey-title { font-size: 40px; }
 
-  /* Team photos: viewport-relative sizing keeps both photos on one
-     row and correctly proportioned no matter the device width. */
+  /* Team photos: the min-width: 0 override is the actual fix — without
+     it a flex item's default minimum width is its content's natural
+     size, so the photo can't shrink to fit the row and instead forces
+     itself (and everything after it) to overflow full-width. */
   .hey-photos {
     flex-direction: row;
     gap: 3vw;
   }
-  .hey-photo-card { flex: 1 1 0; gap: 8px; }
-  .hey-photo { border-radius: 14px; }
+  .hey-photo-card {
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 8px;
+  }
+  .hey-photo {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    transform: none;
+  }
+  .hey-photo-card:nth-child(1) .hey-photo,
+  .hey-photo-card:nth-child(2) .hey-photo {
+    transform: none;
+  }
+  .hey-photo-card:hover .hey-photo {
+    transform: none;
+  }
   .hey-photo-name { font-size: 13px; }
   .hey-photo-link { font-size: 10.5px; padding: 6px 10px; }
 
