@@ -7,8 +7,6 @@ const CARDS = [
   { img: "https://cdn-s-www.bienpublic.com/images/AC513A2C-88A9-456D-972D-758F6975A8A9/NW_raw/le-campus-dijonnais-de-l-universite-de-bourgogne-accueille-plus-de-30-000-etudiants-photo-d-illustration-lbp-emma-buoncristiani-1690820597.jpg", rotate: 9 },
 ];
 
-const SHOWCASE_IMAGE = CARDS[3].img;
-
 const GAP_STATS = [
   { label: "Clear cost & scholarship info", value: 82 },
   { label: "Real admission chances", value: 71 },
@@ -16,6 +14,8 @@ const GAP_STATS = [
 ];
 
 const HEADLINE_WORDS = "82% want clearer info on costs & scholarships".split(" ");
+
+const RESEARCH_VIDEO_SRC = encodeURI("/Unexa Research Film (1).mp4");
 
 const LINKEDIN_URL =
   "https://www.linkedin.com/posts/anastasiia-andriievska-136244223_unexa-uiux-ui-ugcPost-7465337400106573825-TzxU/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEFKh8UBxAs6Av--VNalFnRJGMm8XyrIoQ0";
@@ -302,7 +302,6 @@ function NavLink({ item, isActive, onClick }) {
 }
 
 export default function Landing() {
-  const [showcaseRef, showcaseVisible] = useInViewFade();
   const [zoomRef, progress] = useSmoothScrollProgress();
   const [processCardsRef, activeStep] = useActiveIndex(PROCESS_STEPS.length);
   const [heyRef, heyVisible] = useInViewFade();
@@ -388,7 +387,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="landing-hero">
+      <section className="landing-hero" id="showcase">
         <h1 className="landing-hero-title">
           Built for students still <span className="landing-hero-accent">✳</span>
           <br />
@@ -408,27 +407,6 @@ export default function Landing() {
         ))}
       </section>
 
-      <section className={`landing-showcase${showcaseVisible ? " is-visible" : ""}`} ref={showcaseRef} id="showcase">
-        <div className="showcase-left">
-          <div className="landing-hero-eyebrow showcase-eyebrow">About Unexa</div>
-          <h2 className="showcase-title">
-            Built for students
-            <br />
-            still figuring out
-            <br />
-            <span className="landing-hero-accent">✳</span> where to study next
-          </h2>
-          <p className="showcase-sub">
-            We're building a way to discover <span className="landing-pill">design & art programs</span> across
-            Europe, compare them side by side, and plan every step — application deadlines, portfolio prep, and beyond.
-          </p>
-        </div>
-
-        <div className="showcase-card">
-          <img src={SHOWCASE_IMAGE} alt="" className="showcase-card-img" />
-        </div>
-      </section>
-
       <section className="research-zoom-section" ref={zoomRef} id="research">
         <div className="research-zoom-sticky">
           <div className="research-zoom-fade">
@@ -444,7 +422,7 @@ export default function Landing() {
             <div className="folder-visual" style={{ transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }}>
               <div className="folder-back" />
               <div className="folder-video-slot">
-                <video className="folder-video" src="/unexa.mov" autoPlay muted loop playsInline />
+                <video className="folder-video" src={RESEARCH_VIDEO_SRC} autoPlay muted loop playsInline />
               </div>
             </div>
           </div>
