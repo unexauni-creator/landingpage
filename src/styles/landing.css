@@ -34,38 +34,46 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   pointer-events: none;
 }
 
-/* ── Top navigation bar ── */
+/* ── Top navigation bar: single pill container that holds the top row
+   (logo + links + CTA + hamburger) and, on mobile when open, the
+   dropdown links/CTA flush beneath it with no gap — same rounded box,
+   not two separate floating pieces. Background is fully opaque now,
+   not semi-transparent. ── */
 .landing-nav {
   position: sticky;
   top: 0;
   z-index: 50;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
   padding: 20px 24px 0;
 }
 
 .landing-nav-pill {
-  display: flex;
-  align-items: center;
-  gap: 32px;
   width: 100%;
   max-width: 760px;
-  background: rgba(247, 241, 234, 0.62);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  background: #F7F1EA;
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
-  padding: 10px 12px 10px 22px;
   box-shadow: 0 10px 26px rgba(43,31,24,0.1);
-  transition: background 0.45s var(--ease-premium), box-shadow 0.45s var(--ease-premium), backdrop-filter 0.45s var(--ease-premium);
+  transition: box-shadow 0.45s var(--ease-premium), border-radius 0.3s var(--ease-premium);
+  overflow: hidden;
 }
 
 .landing-nav-pill.is-scrolled {
-  background: rgba(247, 241, 234, 0.86);
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
   box-shadow: 0 14px 34px rgba(43,31,24,0.18);
+}
+
+/* When the mobile dropdown is open, flatten the bottom corners so the
+   top row and the dropdown read as one continuous shape. */
+.landing-nav-pill.is-open {
+  border-radius: 28px;
+}
+
+.landing-nav-top-row {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 10px 12px 10px 22px;
 }
 
 .landing-logo-img {
@@ -176,32 +184,26 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   transform: translateY(-7px) rotate(-45deg);
 }
 
+/* Dropdown sits flush against the top row — same background, no gap,
+   no border of its own — and holds both the links and the CTA button
+   inside one shared container. */
 .landing-nav-mobile-panel {
   display: none;
-  width: 100%;
-  max-width: 760px;
   overflow: hidden;
   max-height: 0;
   opacity: 0;
-  transition: max-height 0.35s var(--ease-premium), opacity 0.3s var(--ease-premium), margin 0.35s var(--ease-premium);
+  transition: max-height 0.35s var(--ease-premium), opacity 0.3s var(--ease-premium);
 }
 .landing-nav-mobile-panel.is-open {
-  max-height: 280px;
+  max-height: 320px;
   opacity: 1;
-  margin-top: 8px;
 }
 
 .landing-nav-mobile-links {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(247, 241, 234, 0.94);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  padding: 12px;
-  box-shadow: 0 14px 34px rgba(43,31,24,0.16);
+  padding: 4px 12px 12px;
 }
 
 .landing-nav-mobile-links .landing-nav-link {
@@ -220,7 +222,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 6px;
   font-family: 'Nunito', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -973,7 +975,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .landing-nav-mobile-panel {
     display: block;
   }
-  .landing-nav-pill {
+  .landing-nav-top-row {
     padding: 8px 8px 8px 18px;
     gap: 0;
   }

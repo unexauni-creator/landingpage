@@ -315,7 +315,7 @@ export default function Landing() {
   });
   const activeSection = useActiveSection(navIds);
   const navScrolled = useScrolled();
-  const navPillClass = navScrolled ? "landing-nav-pill is-scrolled" : "landing-nav-pill";
+  const navPillClass = `landing-nav-pill${navScrolled ? " is-scrolled" : ""}${mobileNavOpen ? " is-open" : ""}`;
 
   const eased = progress * progress * (3 - 2 * progress);
   const scale = 0.55 + eased * 0.7;
@@ -330,9 +330,6 @@ export default function Landing() {
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
 
-  // Video plays only once scrolled into the zoom section, and resets
-  // back to the start whenever you scroll away — so it always begins
-  // fresh the next time you arrive rather than continuing mid-clip.
   useEffect(() => {
     const video = researchVideoRef.current;
     if (!video) return;
@@ -361,47 +358,49 @@ export default function Landing() {
 
       <header className="landing-nav">
         <div className={navPillClass}>
-          <img src="/Unexa Logo.svg" alt="Unexa" className="landing-logo-img" />
+          <div className="landing-nav-top-row">
+            <img src="/Unexa Logo.svg" alt="Unexa" className="landing-logo-img" />
 
-          <nav className="landing-nav-links">
-            {NAV_ITEMS.map(function (item) {
-              return <NavLink key={item.id} item={item} isActive={activeSection === item.id} />;
-            })}
-          </nav>
+            <nav className="landing-nav-links">
+              {NAV_ITEMS.map(function (item) {
+                return <NavLink key={item.id} item={item} isActive={activeSection === item.id} />;
+              })}
+            </nav>
 
-          <a href="#launch" className="landing-nav-cta">
-            Join waitlist <span aria-hidden="true">↗</span>
-          </a>
+            <a href="#launch" className="landing-nav-cta">
+              Join waitlist <span aria-hidden="true">↗</span>
+            </a>
 
-          <button
-            type="button"
-            className={`landing-nav-hamburger${mobileNavOpen ? " is-open" : ""}`}
-            onClick={() => setMobileNavOpen((v) => !v)}
-            aria-label="Toggle menu"
-            aria-expanded={mobileNavOpen}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
+            <button
+              type="button"
+              className={`landing-nav-hamburger${mobileNavOpen ? " is-open" : ""}`}
+              onClick={() => setMobileNavOpen((v) => !v)}
+              aria-label="Toggle menu"
+              aria-expanded={mobileNavOpen}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
 
-        <div className={`landing-nav-mobile-panel${mobileNavOpen ? " is-open" : ""}`}>
-          <nav className="landing-nav-mobile-links">
-            {NAV_ITEMS.map(function (item) {
-              return (
-                <NavLink
-                  key={item.id}
-                  item={item}
-                  isActive={activeSection === item.id}
-                  onClick={closeMobileNav}
-                />
-              );
-            })}
-          </nav>
-          <a href="#launch" className="landing-nav-mobile-cta" onClick={closeMobileNav}>
-            Join waitlist <span aria-hidden="true">↗</span>
-          </a>
+          <div className={`landing-nav-mobile-panel${mobileNavOpen ? " is-open" : ""}`}>
+            <nav className="landing-nav-mobile-links">
+              {NAV_ITEMS.map(function (item) {
+                return (
+                  <NavLink
+                    key={item.id}
+                    item={item}
+                    isActive={activeSection === item.id}
+                    onClick={closeMobileNav}
+                  />
+                );
+              })}
+              <a href="#launch" className="landing-nav-mobile-cta" onClick={closeMobileNav}>
+                Join waitlist <span aria-hidden="true">↗</span>
+              </a>
+            </nav>
+          </div>
         </div>
       </header>
 
