@@ -455,7 +455,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 .folder-visual {
   position: relative;
   width: min(880px, 86vw);
-  height: min(500px, 52vh);
+  aspect-ratio: 16 / 9;
+  height: auto;
   will-change: transform, border-radius, opacity;
   transition: opacity 0.1s linear;
 }
