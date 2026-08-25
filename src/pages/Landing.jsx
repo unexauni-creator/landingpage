@@ -308,6 +308,7 @@ export default function Landing() {
   const [footerRef, footerVisible] = useInViewFade();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
+  const researchVideoRef = useRef(null);
 
   const navIds = NAV_ITEMS.map(function (n) {
     return n.id;
@@ -328,6 +329,23 @@ export default function Landing() {
   const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
+
+  // Video plays only once scrolled into the zoom section, and resets
+  // back to the start whenever you scroll away — so it always begins
+  // fresh the next time you arrive rather than continuing mid-clip.
+  useEffect(() => {
+    const video = researchVideoRef.current;
+    if (!video) return;
+
+    if (progress > 0.02) {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+    } else {
+      video.pause();
+      video.currentTime = 0;
+    }
+  }, [progress]);
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -422,7 +440,14 @@ export default function Landing() {
             <div className="folder-visual" style={{ transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }}>
               <div className="folder-back" />
               <div className="folder-video-slot">
-                <video className="folder-video" src={RESEARCH_VIDEO_SRC} autoPlay muted loop playsInline />
+                <video
+                  className="folder-video"
+                  src={RESEARCH_VIDEO_SRC}
+                  ref={researchVideoRef}
+                  muted
+                  loop
+                  playsInline
+                />
               </div>
             </div>
           </div>

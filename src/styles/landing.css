@@ -329,73 +329,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .landing-fan-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── Showcase section ── */
-.landing-showcase {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 56px;
-  max-width: 1160px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 40px 24px 100px;
-  align-items: start;
-
-  opacity: 0;
-  transform: translateY(48px);
-  transition: opacity 0.9s var(--ease-premium), transform 0.9s var(--ease-premium);
-}
-
-.landing-showcase.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.showcase-left {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding-top: 12px;
-}
-
-.showcase-eyebrow { margin-bottom: -4px; }
-
-.showcase-title {
-  font-family: 'Nunito', sans-serif;
-  font-weight: 800;
-  font-size: 40px;
-  line-height: 1.18;
-  color: rgba(43,31,24,0.96);
-  letter-spacing: -0.01em;
-}
-
-.showcase-sub {
-  font-family: 'Nunito', sans-serif;
-  font-size: 16px;
-  line-height: 1.7;
-  color: #4a3f38;
-  max-width: 440px;
-}
-
-.showcase-card {
-  position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  min-height: 380px;
-  box-shadow: 0 28px 60px rgba(43,31,24,0.22);
-}
-
-.showcase-card-img {
-  width: 100%;
-  height: 100%;
-  min-height: 380px;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.8s var(--ease-premium);
-}
-.showcase-card:hover .showcase-card-img {
-  transform: scale(1.05);
-}
-
 /* ── Folder zoom-reveal section ── */
 .research-zoom-section {
   position: relative;
@@ -452,6 +385,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   color: #4a3f38;
 }
 
+/* Frame locked to a 16:9 ratio so it matches a standard widescreen
+   video with no letterboxing bars. If the actual video's dimensions
+   differ, adjust this aspect-ratio to match. */
 .folder-visual {
   position: relative;
   width: min(880px, 86vw);
@@ -486,6 +422,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: block;
   background: #2b1f18;
 }
+
 /* ── Reveal moment ── */
 .research-zoom-text {
   position: absolute;
@@ -1017,10 +954,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 @media (max-width: 1024px) {
   .landing-hero-title { font-size: 42px; }
 
-  .landing-showcase { grid-template-columns: 1fr; }
-  .showcase-title { font-size: 32px; }
-  .showcase-card, .showcase-card-img { min-height: 320px; }
-
   .research-zoom-text { flex-direction: column; justify-content: center; }
   .research-zoom-title { font-size: 42px; }
 
@@ -1094,13 +1027,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     box-shadow: 0 10px 20px rgba(43,31,24,0.18);
   }
 
-  .landing-showcase { padding: 24px 16px 64px; }
-  .showcase-title { font-size: 26px; }
-
   .research-zoom-sticky { padding-top: 20px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
-  .folder-visual { width: 92vw; height: 28vh; }
+  .folder-visual { width: 92vw; }
   .folder-back { inset: -10px; }
   .research-zoom-fade { gap: 16px; }
 
@@ -1132,10 +1062,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-section { margin-top: 90px; padding: 56px 16px; }
   .hey-title { font-size: 40px; }
 
-  /* Team photos: the min-width: 0 override is the actual fix — without
-     it a flex item's default minimum width is its content's natural
-     size, so the photo can't shrink to fit the row and instead forces
-     itself (and everything after it) to overflow full-width. */
   .hey-photos {
     flex-direction: row;
     gap: 3vw;
