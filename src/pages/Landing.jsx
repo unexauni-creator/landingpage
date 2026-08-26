@@ -23,12 +23,21 @@ const LINKEDIN_URL =
 
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
-// Every video pins at this SAME top offset. Because they share one
-// sticky position and stack in DOM order with rising z-index, the
-// next video slides up from below (native sticky behavior inside its
-// tall wrapper), then locks exactly on top of the previous one —
-// full coverage, no peek/sliver.
-const STACK_TOP = 110;
+// ── True stacked sticky-video scroll ──
+// One pinned container (.process-video-pin) stays sticky for the
+// whole scroll length of the section. Inside it, every video is its
+// own absolutely-positioned layer, each with its OWN translateY driven
+// directly by scroll progress — not relying on native multi-sticky
+// stacking (which has no travel distance once a wrapper comes into
+// view). Video 0 starts already in place (translateY 0%). Video i
+// (i>=1) starts pushed fully below the frame (translateY 100%) and
+// animates up to 0% as the user scrolls through its dedicated
+// segment, then stays locked at 0% — physically covering every video
+// behind it via a higher z-index.
+const STACK_TOP = 110;      // px offset where the video frame pins, clear of the nav
+const SEGMENT_VH = 130;     // vh of scroll dedicated to each video-to-video transition
+const DWELL_FRACTION = 0.25; // portion of each segment spent "holding" before the next video starts sliding
+const TAIL_VH = 50;          // extra dwell after the last video locks, before the section releases
 
 const PROCESS_STEPS = [
   {
@@ -234,30 +243,44 @@ function GapStat({ label, value, start, delay }) {
   );
 }
 
-// Drives which step's text is shown: divides the video-stack
-// container's scrollable height evenly across the steps, and picks
-// whichever step the user has scrolled past. Keeps the left-column
-// text in sync with whichever video is currently on top of the stack.
-function useActiveIndex(count) {
-  const containerRef = useRef(null);
+// Drives the whole video-stack effect. Computes, on every scroll tick:
+//  - layerProgress[i]: 0→1 for how far video i has travelled into its
+//    locked position (used for translateY on each video layer)
+//  - activeIndex: which video is currently "on top", used to drive the
+//    text column exactly like the previous behavior
+function useVideoStack(count) {
+  const wrapperRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [layerProgress, setLayerProgress] = useState(() =>
+    Array.from({ length: count }, (_, i) => (i === 0 ? 1 : 0))
+  );
 
   useEffect(() => {
     function update() {
-      const el = containerRef.current;
+      const el = wrapperRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const perStep = rect.height / count;
-      if (perStep <= 0) return;
-      const scrolledPast = -rect.top;
-      let idx = Math.floor(scrolledPast / perStep);
-      idx = Math.max(0, Math.min(count - 1, idx));
+      const segmentPx = (window.innerHeight * SEGMENT_VH) / 100;
+      const scrolled = Math.max(0, -rect.top);
+
+      const progress = Array.from({ length: count }, (_, i) => {
+        if (i === 0) return 1;
+        const segmentStart = (i - 1) * segmentPx;
+        const raw = (scrolled - segmentStart) / segmentPx;
+        const adjusted = (raw - DWELL_FRACTION) / (1 - DWELL_FRACTION);
+        return Math.max(0, Math.min(1, adjusted));
+      });
+      setLayerProgress(progress);
+
+      let idx = 0;
+      for (let i = 1; i < count; i++) {
+        if (progress[i] > 0.5) idx = i;
+      }
       setActiveIndex(idx);
     }
 
     update();
     const settleTimer = setTimeout(update, 300);
-
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
 
@@ -268,7 +291,7 @@ function useActiveIndex(count) {
     };
   }, [count]);
 
-  return [containerRef, activeIndex];
+  return [wrapperRef, activeIndex, layerProgress];
 }
 
 function useActiveSection(ids) {
@@ -335,7 +358,7 @@ function NavLink({ item, isActive, onClick }) {
 
 export default function Landing() {
   const [zoomRef, progress] = useSmoothScrollProgress();
-  const [processCardsRef, activeStep] = useActiveIndex(PROCESS_STEPS.length);
+  const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
@@ -359,6 +382,8 @@ export default function Landing() {
   const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
+  const videoStackHeight =
+    (PROCESS_STEPS.length - 1) * SEGMENT_VH + 100 + TAIL_VH;
 
   useEffect(() => {
     const video = researchVideoRef.current;
@@ -531,20 +556,30 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="process-video-stack" ref={processCardsRef}>
-          {PROCESS_STEPS.map((step, i) => (
-            <div key={step.key} className="process-video-slide" style={{ zIndex: i + 1 }}>
-              <div className="process-video-sticky" style={{ top: `${STACK_TOP}px` }}>
-                <div className="process-video-frame">
+        <div
+          className="process-video-stack"
+          ref={videoStackRef}
+          style={{ height: `${videoStackHeight}vh` }}
+        >
+          <div className="process-video-pin" style={{ top: `${STACK_TOP}px` }}>
+            {PROCESS_STEPS.map((step, i) => {
+              const p = layerProgress[i] ?? (i === 0 ? 1 : 0);
+              const translateY = (1 - p) * 100;
+              return (
+                <div
+                  key={step.key}
+                  className="process-video-frame"
+                  style={{ zIndex: i + 1, transform: `translateY(${translateY}%)` }}
+                >
                   {step.type === "video" ? (
                     <video className="process-video-el" src={step.src} autoPlay muted loop playsInline />
                   ) : (
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       </section>
 

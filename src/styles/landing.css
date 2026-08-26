@@ -558,16 +558,20 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    Process section
 
    Left column: text pinned in place, re-mounts (key=activeStep) to
-   replay its slide-in animation as the top video changes.
+   replay its slide-in animation as the top video changes — unchanged
+   from the original behavior.
 
-   Right column: true stacked sticky videos. Every .process-video-sticky
-   shares the SAME top offset (STACK_TOP), so as the user scrolls, each
-   video's tall wrapper (.process-video-slide) lets the browser's native
-   sticky behavior carry it up from below the viewport until it reaches
-   STACK_TOP — at which point it locks in the exact same spot as the
-   previous video, fully covering it (not peeking above it). No gaps,
-   no background — the paper texture shows through everywhere except
-   the video frames themselves.
+   Right column: true stacked scroll-driven videos. .process-video-pin
+   is the ONE sticky container that stays pinned for the section's
+   entire scroll length. Every video is its own absolutely-positioned
+   layer inside it, with its own inline transform: translateY, updated
+   directly from scroll progress via JS (see useVideoStack). Each video
+   physically starts at translateY(100%) — pushed fully below the pinned
+   frame — and animates up to translateY(0%) as you scroll through its
+   segment, then holds there, covering every layer behind it (increasing
+   z-index). This guarantees real, visible travel every time, since it
+   doesn't depend on native sticky elements happening to have travel
+   room available (which is what caused the earlier "swap" bug).
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -649,30 +653,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 .process-video-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  background: transparent;
-}
-
-.process-video-slide {
   position: relative;
-  height: 150vh; /* scroll distance each video travels before locking */
 }
 
-.process-video-sticky {
+.process-video-pin {
   position: sticky;
-  width: 100%;
+  height: calc(100vh - 110px);
 }
 
 .process-video-frame {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 70vh;
+  position: absolute;
+  inset: 0;
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 24px 52px rgba(43,31,24,0.3);
   background: #1c140f;
+  transition: transform 0.12s linear;
+  will-change: transform;
 }
 
 .process-video-el {
@@ -974,11 +971,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-title { font-size: 24px; }
   .process-desc { font-size: 14px; }
   .process-video-stack { margin-top: 12px; }
-  .process-video-slide { height: 100vh; }
-  .process-video-frame {
-    aspect-ratio: 4 / 3;
-    max-height: 46vh;
-  }
+  .process-video-pin { height: 46vh; }
 }
 
 /* ══════════════ Mobile ══════════════ */
