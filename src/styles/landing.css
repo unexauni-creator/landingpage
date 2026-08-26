@@ -561,15 +561,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    replay its slide-in animation as the top video changes.
 
    Right column: true stacked scroll-driven videos. .process-video-pin
-   is the ONE sticky container that stays pinned for the section's
-   entire scroll length. Every video is its own absolutely-positioned
-   layer inside it, with its own inline transform: translateY, updated
-   directly from scroll progress via JS (see useVideoStack). Each video
-   starts pushed fully below the pinned frame and animates up as you
-   scroll through its segment, then holds at a resting position offset
-   by STACK_GAP px per layer — so once locked, each card sits a little
-   lower than the one before it, keeping a visible sliver of every
-   earlier card in view beneath the current top card.
+   is the ONE sticky container pinned for the section's entire scroll
+   length. Every video is its own absolutely-positioned layer with its
+   own inline transform: translateY, updated directly from scroll
+   progress via JS. Each video starts pushed fully below the pinned
+   frame and animates up during its segment, holding at a resting
+   position offset by STACK_GAP px per layer — so once locked, a thin
+   sliver of each earlier card stays visible beneath the current top
+   card. That sliver is always a STILL FRAME, never playing video,
+   because playback is controlled in JS (see the play/pause effect in
+   Landing.jsx) so only the active layer's video actually plays.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -937,6 +938,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
+/* ══════════════ Mobile / Tablet — same behavior as desktop, stacked
+   vertically: text sits in normal document flow (no floating card,
+   no separate sticky background), directly above the sticky video
+   stack — mirroring the desktop's "text, then video" arrangement in
+   a single column instead of a side-by-side grid. ══════════════ */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -955,26 +961,21 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-section {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 28px;
     padding-top: 100px;
   }
   .process-sticky-col {
-    position: sticky;
-    top: 84px;
+    position: static;
     transform: none;
-    z-index: 60;
-    background: #e2e0e0;
-    background-image: var(--paper-texture, none);
-    background-size: cover;
-    background-position: center;
-    padding: 14px 16px 18px;
-    border-radius: 20px;
-    box-shadow: 0 12px 24px rgba(43,31,24,0.1);
-    gap: 10px;
+    background: none;
+    box-shadow: none;
+    padding: 0 4px;
+    border-radius: 0;
+    gap: 12px;
   }
   .process-title { font-size: 24px; }
   .process-desc { font-size: 14px; }
-  .process-video-stack { margin-top: 12px; }
+  .process-video-stack { margin-top: 0; }
   .process-video-pin { height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 }

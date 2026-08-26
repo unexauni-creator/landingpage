@@ -25,19 +25,18 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 
 // ── True stacked sticky-video scroll ──
 // One pinned container (.process-video-pin) stays sticky for the
-// whole scroll length of the section. Inside it, every video is its
-// own absolutely-positioned layer, each with its OWN translateY driven
-// directly by scroll progress — not relying on native multi-sticky
-// stacking. Video 0 starts already in place. Video i (i>=1) starts
-// pushed fully below the frame (translateY 100%) and animates up to
-// its resting position as the user scrolls through its dedicated
-// segment, then stays locked there. Each locked video rests STACK_GAP
-// px lower than the one before it, so a visible sliver of every
-// earlier card peeks out beneath the current top card — a real,
-// readable stack instead of a flush swap.
+// whole scroll length of the section. Each video is its own
+// absolutely-positioned layer with its own scroll-driven translateY.
+// Video 0 starts already in place. Video i (i>=1) starts pushed fully
+// below the frame and animates up during its dedicated segment, then
+// holds at a resting position offset by STACK_GAP px per layer, so a
+// thin sliver of every earlier card stays visible beneath the current
+// top card. ONLY the currently-active layer actually plays its video
+// — every other layer is paused, so a peeking sliver is a still frame,
+// never a second (or third) video visibly playing underneath.
 const STACK_TOP = 110;       // px offset where the video frame pins, clear of the nav
-const SEGMENT_VH = 170;      // vh of scroll dedicated to each video-to-video transition
-const DWELL_FRACTION = 0.45; // portion of each segment spent fully holding before the next video starts sliding
+const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
+const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
 const TAIL_VH = 60;          // extra dwell after the last video locks, before the section releases
 const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
 
@@ -248,8 +247,9 @@ function GapStat({ label, value, start, delay }) {
 // Drives the whole video-stack effect. Computes, on every scroll tick:
 //  - layerProgress[i]: 0→1 for how far video i has travelled into its
 //    locked position (used for translateY on each video layer)
-//  - activeIndex: which video is currently "on top", used to drive the
-//    text column exactly like the previous behavior
+//  - activeIndex: which video is currently "on top" — used both to
+//    drive the text column, and to decide which single video layer is
+//    allowed to actually play (see the play/pause effect below)
 function useVideoStack(count) {
   const wrapperRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -364,6 +364,7 @@ export default function Landing() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
+  const processVideoRefs = useRef([]);
 
   const navIds = NAV_ITEMS.map(function (n) {
     return n.id;
@@ -400,6 +401,25 @@ export default function Landing() {
       video.currentTime = 0;
     }
   }, [progress]);
+
+  // Only the currently-active process step's video is allowed to play.
+  // Every other video layer is paused (and rewound), so any peeking
+  // sliver visible underneath the top card is a still frame — never a
+  // second or third video visibly playing at the same time.
+  useEffect(() => {
+    PROCESS_STEPS.forEach((step, i) => {
+      const el = processVideoRefs.current[i];
+      if (!el || step.type !== "video") return;
+      if (i === activeStep) {
+        if (el.paused) {
+          el.currentTime = 0;
+          el.play().catch(() => {});
+        }
+      } else if (!el.paused) {
+        el.pause();
+      }
+    });
+  }, [activeStep]);
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -575,7 +595,14 @@ export default function Landing() {
                   style={{ zIndex: i + 1, transform: `translateY(${translateY})` }}
                 >
                   {step.type === "video" ? (
-                    <video className="process-video-el" src={step.src} autoPlay muted loop playsInline />
+                    <video
+                      className="process-video-el"
+                      src={step.src}
+                      ref={(el) => (processVideoRefs.current[i] = el)}
+                      muted
+                      loop
+                      playsInline
+                    />
                   ) : (
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
