@@ -23,12 +23,12 @@ const LINKEDIN_URL =
 
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
-// Video-stack peek offsets: each later video pins STACK_PEEK px lower
-// than the one before it, so it seals over the previous video while
-// leaving a thin sliver of it visible above — pure CSS sticky, no
-// scroll math needed for the stacking itself.
-const STACK_TOP_BASE = 96;
-const STACK_PEEK = 28;
+// Every video pins at this SAME top offset. Because they share one
+// sticky position and stack in DOM order with rising z-index, the
+// next video slides up from below (native sticky behavior inside its
+// tall wrapper), then locks exactly on top of the previous one —
+// full coverage, no peek/sliver.
+const STACK_TOP = 110;
 
 const PROCESS_STEPS = [
   {
@@ -236,9 +236,8 @@ function GapStat({ label, value, start, delay }) {
 
 // Drives which step's text is shown: divides the video-stack
 // container's scrollable height evenly across the steps, and picks
-// whichever step the user has scrolled past. This is what keeps the
-// left-column text in sync with whichever video is currently on top
-// of the stack on the right.
+// whichever step the user has scrolled past. Keeps the left-column
+// text in sync with whichever video is currently on top of the stack.
 function useActiveIndex(count) {
   const containerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -535,10 +534,7 @@ export default function Landing() {
         <div className="process-video-stack" ref={processCardsRef}>
           {PROCESS_STEPS.map((step, i) => (
             <div key={step.key} className="process-video-slide" style={{ zIndex: i + 1 }}>
-              <div
-                className="process-video-sticky"
-                style={{ top: `${STACK_TOP_BASE + i * STACK_PEEK}px` }}
-              >
+              <div className="process-video-sticky" style={{ top: `${STACK_TOP}px` }}>
                 <div className="process-video-frame">
                   {step.type === "video" ? (
                     <video className="process-video-el" src={step.src} autoPlay muted loop playsInline />

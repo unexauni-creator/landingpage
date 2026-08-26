@@ -557,16 +557,17 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ══════════════════════════════════════════════════════════════════
    Process section
 
-   Left column: text pinned in place, updates via re-mount (key=
-   activeStep) which replays the slide-in animation. No background —
-   the page's paper texture shows straight through.
+   Left column: text pinned in place, re-mounts (key=activeStep) to
+   replay its slide-in animation as the top video changes.
 
-   Right column: pure-CSS stacked sticky videos. Each video's sticky
-   wrapper pins at an increasing top offset, so later videos slide up
-   and seal fully over earlier ones, leaving only a thin visible sliver
-   of each previous video peeking out above. No card background behind
-   the videos — just the video frame itself with rounded corners and a
-   shadow, floating directly on the paper texture.
+   Right column: true stacked sticky videos. Every .process-video-sticky
+   shares the SAME top offset (STACK_TOP), so as the user scrolls, each
+   video's tall wrapper (.process-video-slide) lets the browser's native
+   sticky behavior carry it up from below the viewport until it reaches
+   STACK_TOP — at which point it locks in the exact same spot as the
+   previous video, fully covering it (not peeking above it). No gaps,
+   no background — the paper texture shows through everywhere except
+   the video frames themselves.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -656,7 +657,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .process-video-slide {
   position: relative;
-  height: 150vh;
+  height: 150vh; /* scroll distance each video travels before locking */
 }
 
 .process-video-sticky {
@@ -670,7 +671,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   max-height: 70vh;
   border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 24px 52px rgba(43,31,24,0.28);
+  box-shadow: 0 24px 52px rgba(43,31,24,0.3);
   background: #1c140f;
 }
 
@@ -679,10 +680,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   height: 100%;
   object-fit: contain;
   display: block;
-  transition: transform 0.7s var(--ease-premium);
-}
-.process-video-frame:hover .process-video-el {
-  transform: scale(1.02);
 }
 
 /* ── Team ("Hey!") section ── */
