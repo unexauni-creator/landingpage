@@ -940,11 +940,13 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 /* ══════════════ Mobile / Tablet — text and video BOTH stay pinned
    and visible together while scrolling, stacked vertically. The text
-   block is sticky at the top (just below the nav) with a reserved
-   min-height so it doesn't jump between slides of different length;
-   the video pin is sticky directly beneath it, at a top offset large
-   enough to clear the text block. Both remain on screen at once,
-   matching the desktop's "text + video together" behavior. ══════════ */
+   block gets a FIXED height (identical across all 3 steps, not
+   min-height) so its box never grows into the video's space no
+   matter how long a given step's copy is; overflow:hidden is a
+   safety net for the rare case text still runs long. The video pin's
+   top offset is then set to exactly text-top + text-height + a small
+   gap, so the two sticky elements always stack with zero overlap and
+   zero unwanted space between them. ══════════════ */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -973,15 +975,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     transform: none;
     background: transparent;
     box-shadow: none;
-    padding: 14px 4px 10px;
+    padding: 14px 4px 0;
     border-radius: 0;
-    gap: 10px;
-    min-height: 200px;
+    gap: 8px;
+    height: 224px;
+    overflow: hidden;
   }
-  .process-title { font-size: 22px; }
-  .process-desc { font-size: 13.5px; }
+  .process-title { font-size: 21px; line-height: 1.2; }
+  .process-desc {
+    font-size: 13px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 288px !important; height: 46vh; }
+  .process-video-pin { top: 308px !important; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 }
 
@@ -1035,8 +1045,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-name { font-size: 14px; }
   .linkedin-card-cta { font-size: 11px; padding: 6px 12px; }
 
-  .process-sticky-col { top: 76px; min-height: 190px; }
-  .process-video-pin { top: 266px !important; height: 42vh; }
+  .process-sticky-col { top: 76px; height: 200px; padding-top: 12px; }
+  .process-title { font-size: 19px; }
+  .process-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
+  .process-video-pin { top: 280px !important; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1079,7 +1091,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .research-zoom-stat-value { font-size: 19px; }
 
-  .process-sticky-col { top: 70px; min-height: 175px; }
-  .process-video-pin { top: 245px !important; height: 40vh; }
+  .process-sticky-col { top: 70px; height: 186px; }
+  .process-title { font-size: 18px; }
+  .process-desc { font-size: 12px; -webkit-line-clamp: 3; }
+  .process-video-pin { top: 256px !important; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 }
