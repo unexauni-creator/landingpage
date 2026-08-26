@@ -28,16 +28,18 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 // whole scroll length of the section. Inside it, every video is its
 // own absolutely-positioned layer, each with its OWN translateY driven
 // directly by scroll progress — not relying on native multi-sticky
-// stacking (which has no travel distance once a wrapper comes into
-// view). Video 0 starts already in place (translateY 0%). Video i
-// (i>=1) starts pushed fully below the frame (translateY 100%) and
-// animates up to 0% as the user scrolls through its dedicated
-// segment, then stays locked at 0% — physically covering every video
-// behind it via a higher z-index.
-const STACK_TOP = 110;      // px offset where the video frame pins, clear of the nav
-const SEGMENT_VH = 130;     // vh of scroll dedicated to each video-to-video transition
-const DWELL_FRACTION = 0.25; // portion of each segment spent "holding" before the next video starts sliding
-const TAIL_VH = 50;          // extra dwell after the last video locks, before the section releases
+// stacking. Video 0 starts already in place. Video i (i>=1) starts
+// pushed fully below the frame (translateY 100%) and animates up to
+// its resting position as the user scrolls through its dedicated
+// segment, then stays locked there. Each locked video rests STACK_GAP
+// px lower than the one before it, so a visible sliver of every
+// earlier card peeks out beneath the current top card — a real,
+// readable stack instead of a flush swap.
+const STACK_TOP = 110;       // px offset where the video frame pins, clear of the nav
+const SEGMENT_VH = 170;      // vh of scroll dedicated to each video-to-video transition
+const DWELL_FRACTION = 0.45; // portion of each segment spent fully holding before the next video starts sliding
+const TAIL_VH = 60;          // extra dwell after the last video locks, before the section releases
+const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
 
 const PROCESS_STEPS = [
   {
@@ -564,12 +566,13 @@ export default function Landing() {
           <div className="process-video-pin" style={{ top: `${STACK_TOP}px` }}>
             {PROCESS_STEPS.map((step, i) => {
               const p = layerProgress[i] ?? (i === 0 ? 1 : 0);
-              const translateY = (1 - p) * 100;
+              const restOffset = i * STACK_GAP;
+              const translateY = `calc(${(1 - p) * 100}% + ${restOffset}px)`;
               return (
                 <div
                   key={step.key}
                   className="process-video-frame"
-                  style={{ zIndex: i + 1, transform: `translateY(${translateY}%)` }}
+                  style={{ zIndex: i + 1, transform: `translateY(${translateY})` }}
                 >
                   {step.type === "video" ? (
                     <video className="process-video-el" src={step.src} autoPlay muted loop playsInline />

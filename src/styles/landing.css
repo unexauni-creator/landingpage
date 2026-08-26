@@ -558,20 +558,18 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    Process section
 
    Left column: text pinned in place, re-mounts (key=activeStep) to
-   replay its slide-in animation as the top video changes — unchanged
-   from the original behavior.
+   replay its slide-in animation as the top video changes.
 
    Right column: true stacked scroll-driven videos. .process-video-pin
    is the ONE sticky container that stays pinned for the section's
    entire scroll length. Every video is its own absolutely-positioned
    layer inside it, with its own inline transform: translateY, updated
    directly from scroll progress via JS (see useVideoStack). Each video
-   physically starts at translateY(100%) — pushed fully below the pinned
-   frame — and animates up to translateY(0%) as you scroll through its
-   segment, then holds there, covering every layer behind it (increasing
-   z-index). This guarantees real, visible travel every time, since it
-   doesn't depend on native sticky elements happening to have travel
-   room available (which is what caused the earlier "swap" bug).
+   starts pushed fully below the pinned frame and animates up as you
+   scroll through its segment, then holds at a resting position offset
+   by STACK_GAP px per layer — so once locked, each card sits a little
+   lower than the one before it, keeping a visible sliver of every
+   earlier card in view beneath the current top card.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -672,7 +670,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   max-height: 70vh;
   border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 24px 52px rgba(43,31,24,0.3);
+  box-shadow: 0 -6px 0 rgba(255,255,255,0.55), 0 24px 52px rgba(43,31,24,0.32);
   background: #1c140f;
   transition: transform 0.12s linear;
   will-change: transform;
@@ -978,6 +976,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-desc { font-size: 14px; }
   .process-video-stack { margin-top: 12px; }
   .process-video-pin { height: 46vh; }
+  .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 }
 
 /* ══════════════ Mobile ══════════════ */
