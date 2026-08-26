@@ -34,10 +34,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   pointer-events: none;
 }
 
-/* ── Top navigation bar ──
-   z-index raised above the process stack (which now runs up to
-   z-index: total-steps) so the nav is always unambiguously on top,
-   no matter how many cards are stacked beneath it. */
 .landing-nav {
   position: sticky;
   top: 0;
@@ -559,59 +555,38 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Process section — stacked sticky-scroll cards (Jitter-style)
+   Process section
 
-   Each .process-slide is a tall scroll-driving wrapper. Its
-   .process-slide-sticky child is position:sticky with a top offset
-   that GROWS with index (110, 142, 174…px). Because every later
-   card sits at a lower top AND a higher z-index, it slides up and
-   seals fully over the card behind it — the only part of the
-   earlier card left visible is the thin band between the two top
-   offsets. That band is the "peek" you see in the reference shots.
-   No JS scroll math is involved: it's plain CSS sticky stacking, so
-   it can't drift, jump, or leave gaps.
+   Left column: text pinned in place, updates via re-mount (key=
+   activeStep) which replays the slide-in animation. No background —
+   the page's paper texture shows straight through.
+
+   Right column: pure-CSS stacked sticky videos. Each video's sticky
+   wrapper pins at an increasing top offset, so later videos slide up
+   and seal fully over earlier ones, leaving only a thin visible sliver
+   of each previous video peeking out above. No card background behind
+   the videos — just the video frame itself with rounded corners and a
+   shadow, floating directly on the paper texture.
    ══════════════════════════════════════════════════════════════════ */
-.process-stack {
-  position: relative;
+.process-section {
   max-width: 1160px;
   width: 100%;
   margin: 0 auto;
-  padding: 0 24px;
-}
-
-.process-slide {
-  position: relative;
-  height: 170vh; /* pin distance: 100vh visible + ~70vh dwell before the next card covers it */
-}
-
-.process-slide.is-last {
-  height: 100vh;
-}
-
-.process-slide-sticky {
-  position: sticky;
-  /* top + height are set inline per slide from STACK_TOP_BASE / STACK_PEEK */
-  width: 100%;
-}
-
-.process-slide-panel {
-  width: 100%;
-  height: 100%;
-  background: #F7F1EA;
-  border-radius: 32px;
-  box-shadow: 0 30px 70px rgba(43,31,24,0.26);
-  overflow: hidden;
+  padding: 25vh 24px 0;
   display: grid;
   grid-template-columns: 380px 1fr;
-  gap: 56px;
-  align-items: center;
-  padding: 56px;
+  gap: 64px;
+  align-items: start;
+  background: transparent;
 }
 
-.process-slide-text {
+.process-sticky-col {
+  position: sticky;
+  top: 40vh;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
 }
 
 .process-eyebrow {
@@ -620,11 +595,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   gap: 8px;
 }
 
-.process-slide-count {
+.process-step-count {
   font-weight: 700;
   color: #4a3f38;
   opacity: 0.55;
   letter-spacing: 0;
+}
+
+.process-active-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: process-slide-in 0.5s var(--ease-premium) both;
+}
+
+@keyframes process-slide-in {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .process-title {
@@ -660,25 +647,42 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   background: #AC8876;
 }
 
-.process-slide-media {
-  width: 100%;
-  height: 100%;
-  max-height: 640px;
-  aspect-ratio: 16 / 9;
-  border-radius: 24px;
-  overflow: hidden;
-  background: #1c140f;
-  box-shadow: 0 20px 44px rgba(43,31,24,0.2);
-  justify-self: stretch;
-  align-self: center;
-  margin: 0 auto;
+.process-video-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: transparent;
 }
 
-.process-slide-media-el {
+.process-video-slide {
+  position: relative;
+  height: 150vh;
+}
+
+.process-video-sticky {
+  position: sticky;
+  width: 100%;
+}
+
+.process-video-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 70vh;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 52px rgba(43,31,24,0.28);
+  background: #1c140f;
+}
+
+.process-video-el {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
+  transition: transform 0.7s var(--ease-premium);
+}
+.process-video-frame:hover .process-video-el {
+  transform: scale(1.02);
 }
 
 /* ── Team ("Hey!") section ── */
@@ -935,7 +939,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* Hamburger takes over from this breakpoint down */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -952,17 +955,33 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     gap: 0;
   }
 
-  .process-slide { height: 145vh; }
-  .process-slide.is-last { height: 100vh; }
-  .process-slide-panel {
+  .process-section {
     grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 28px;
-    border-radius: 24px;
+    gap: 0;
+    padding-top: 100px;
+  }
+  .process-sticky-col {
+    position: sticky;
+    top: 84px;
+    transform: none;
+    z-index: 60;
+    background: #e2e0e0;
+    background-image: var(--paper-texture, none);
+    background-size: cover;
+    background-position: center;
+    padding: 14px 16px 18px;
+    border-radius: 20px;
+    box-shadow: 0 12px 24px rgba(43,31,24,0.1);
+    gap: 10px;
   }
   .process-title { font-size: 24px; }
   .process-desc { font-size: 14px; }
-  .process-slide-media { max-height: none; }
+  .process-video-stack { margin-top: 12px; }
+  .process-video-slide { height: 100vh; }
+  .process-video-frame {
+    aspect-ratio: 4 / 3;
+    max-height: 46vh;
+  }
 }
 
 /* ══════════════ Mobile ══════════════ */
@@ -1014,10 +1033,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .linkedin-card-name { font-size: 14px; }
   .linkedin-card-cta { font-size: 11px; padding: 6px 12px; }
-
-  .process-slide { height: 130vh; }
-  .process-slide-panel { padding: 20px; border-radius: 20px; gap: 16px; }
-  .process-slide-media { aspect-ratio: 4 / 3; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
   .hey-title { font-size: 40px; }

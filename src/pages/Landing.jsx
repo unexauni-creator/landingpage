@@ -23,15 +23,12 @@ const LINKEDIN_URL =
 
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
-// ── Stacked sticky-scroll cards ──
-// Each entry becomes one full-bleed pinned panel. STACK_TOP_BASE is
-// where the first card pins (clear of the fixed nav pill). Each
-// subsequent card pins STACK_PEEK px lower than the one before it,
-// so the previous card is never fully hidden — only the top
-// STACK_PEEK px of it stay visible as a sliver once the next card
-// seals over it.
-const STACK_TOP_BASE = 110;
-const STACK_PEEK = 32;
+// Video-stack peek offsets: each later video pins STACK_PEEK px lower
+// than the one before it, so it seals over the previous video while
+// leaving a thin sliver of it visible above — pure CSS sticky, no
+// scroll math needed for the stacking itself.
+const STACK_TOP_BASE = 96;
+const STACK_PEEK = 28;
 
 const PROCESS_STEPS = [
   {
@@ -237,44 +234,42 @@ function GapStat({ label, value, start, delay }) {
   );
 }
 
-// One stacked slide. No scroll math needed — the peek/seal effect is
-// pure CSS (position: sticky + increasing top offset per index), so
-// there's nothing here that can drift out of sync with the DOM.
-function ProcessSlide({ step, index, total }) {
-  const isLast = index === total - 1;
-  const top = STACK_TOP_BASE + index * STACK_PEEK;
+// Drives which step's text is shown: divides the video-stack
+// container's scrollable height evenly across the steps, and picks
+// whichever step the user has scrolled past. This is what keeps the
+// left-column text in sync with whichever video is currently on top
+// of the stack on the right.
+function useActiveIndex(count) {
+  const containerRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  return (
-    <div className={`process-slide${isLast ? " is-last" : ""}`} style={{ zIndex: index + 1 }}>
-      <div
-        className="process-slide-sticky"
-        style={{ top: `${top}px`, height: `calc(100vh - ${top}px)` }}
-      >
-        <div className="process-slide-panel">
-          <div className="process-slide-text">
-            <div className="landing-hero-eyebrow process-eyebrow">
-              Our process <span className="process-slide-count">{index + 1} / {total}</span>
-            </div>
-            <h2 className="process-title">{step.title}</h2>
-            <p className="process-desc">{step.text}</p>
-            <div className="process-progress">
-              {Array.from({ length: total }).map((_, i) => (
-                <span key={i} className={`process-progress-dot${i === index ? " is-active" : ""}`} />
-              ))}
-            </div>
-          </div>
+  useEffect(() => {
+    function update() {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const perStep = rect.height / count;
+      if (perStep <= 0) return;
+      const scrolledPast = -rect.top;
+      let idx = Math.floor(scrolledPast / perStep);
+      idx = Math.max(0, Math.min(count - 1, idx));
+      setActiveIndex(idx);
+    }
 
-          <div className="process-slide-media">
-            {step.type === "video" ? (
-              <video className="process-slide-media-el" src={step.src} autoPlay muted loop playsInline />
-            ) : (
-              <img className="process-slide-media-el" src={step.src} alt={step.title} />
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    update();
+    const settleTimer = setTimeout(update, 300);
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      clearTimeout(settleTimer);
+    };
+  }, [count]);
+
+  return [containerRef, activeIndex];
 }
 
 function useActiveSection(ids) {
@@ -341,6 +336,7 @@ function NavLink({ item, isActive, onClick }) {
 
 export default function Landing() {
   const [zoomRef, progress] = useSmoothScrollProgress();
+  const [processCardsRef, activeStep] = useActiveIndex(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
@@ -362,6 +358,8 @@ export default function Landing() {
 
   const wordRevealFraction = Math.max(0, Math.min(1, (progress - 0.91) / 0.09));
   const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
+
+  const activeProcessStep = PROCESS_STEPS[activeStep];
 
   useEffect(() => {
     const video = researchVideoRef.current;
@@ -518,10 +516,40 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="process-stack" id="process">
-        {PROCESS_STEPS.map((step, i) => (
-          <ProcessSlide key={step.key} step={step} index={i} total={PROCESS_STEPS.length} />
-        ))}
+      <section className="process-section" id="process">
+        <div className="process-sticky-col">
+          <div className="landing-hero-eyebrow process-eyebrow">
+            Our process <span className="process-step-count">{activeStep + 1} / {PROCESS_STEPS.length}</span>
+          </div>
+          <div key={activeStep} className="process-active-text">
+            <h2 className="process-title">{activeProcessStep.title}</h2>
+            <p className="process-desc">{activeProcessStep.text}</p>
+          </div>
+          <div className="process-progress">
+            {PROCESS_STEPS.map((s, i) => (
+              <span key={s.key} className={`process-progress-dot${i === activeStep ? " is-active" : ""}`} />
+            ))}
+          </div>
+        </div>
+
+        <div className="process-video-stack" ref={processCardsRef}>
+          {PROCESS_STEPS.map((step, i) => (
+            <div key={step.key} className="process-video-slide" style={{ zIndex: i + 1 }}>
+              <div
+                className="process-video-sticky"
+                style={{ top: `${STACK_TOP_BASE + i * STACK_PEEK}px` }}
+              >
+                <div className="process-video-frame">
+                  {step.type === "video" ? (
+                    <video className="process-video-el" src={step.src} autoPlay muted loop playsInline />
+                  ) : (
+                    <img className="process-video-el" src={step.src} alt={step.title} />
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <motion.section
