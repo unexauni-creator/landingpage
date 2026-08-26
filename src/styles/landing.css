@@ -557,28 +557,34 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ══════════════════════════════════════════════════════════════════
    Process section
 
+   .process-section carries position: relative and isolation: isolate.
+   isolation gives every z-index used inside (text column, video pin,
+   stacked video frames) its own private stacking context that can
+   never paint above sections that follow — this is what prevents the
+   text/video from ever overlapping the Team section below it.
+
+   IMPORTANT: this section does NOT use overflow: hidden. Per spec,
+   overflow other than "visible" on an ancestor turns it into a scroll
+   container, and any position: sticky descendant then sticks relative
+   to THAT container instead of the viewport — since this section
+   itself never scrolls internally, that silently breaks sticky
+   positioning for both the text column and the video pin on mobile,
+   causing the garbled/overlapping render seen when overflow:hidden
+   was previously present. isolation: isolate alone is sufficient for
+   stacking-order containment without this side effect.
+
    Left column: text pinned in place, re-mounts (key=activeStep) to
-   replay its slide-in animation as the top video changes.
+   replay its slide-in animation as the top video changes. z-index: 20
+   as a safety net so it always renders above the video layer if the
+   two ever get close.
 
-   Right column: true stacked scroll-driven videos. .process-video-pin
-   is the ONE sticky container pinned for the section's entire scroll
-   length. Every video is its own absolutely-positioned layer with its
-   own inline transform: translateY, updated directly from scroll
-   progress via JS. Each video starts pushed fully below the pinned
-   frame and animates up during its segment, holding at a resting
-   position offset by STACK_GAP px per layer, so once locked, a thin
-   sliver of each earlier card stays visible beneath the current top
-   card. That sliver is always a STILL FRAME, never playing video,
-   because playback is controlled in JS so only the active layer's
-   video actually plays.
-
-   .process-section gets `isolation: isolate` so every z-index used
-   inside it (sticky text col, sticky video pin, stacked video frames)
-   is contained to its OWN stacking context and can never paint above
-   sections that come after it in the document. That is what fixes the
-   "cards render on top of the Hey/Team section" bug: as the sticky
-   elements naturally release at the bottom of this section, they are
-   guaranteed to sit behind whatever comes next, never in front of it.
+   Right column: true stacked scroll-driven videos, z-index: 5 (below
+   the text). .process-video-pin is the ONE sticky container pinned
+   for the section's entire scroll length; every video inside it is
+   its own absolutely-positioned layer with its own scroll-driven
+   translateY, animating up from below the frame and locking with a
+   STACK_GAP px offset per layer so a still-frame sliver of each
+   earlier card stays visible beneath the current top card.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -598,6 +604,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   position: sticky;
   top: 40vh;
   transform: translateY(-50%);
+  z-index: 20;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -663,6 +670,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .process-video-stack {
   position: relative;
+  z-index: 5;
 }
 
 .process-video-pin {
@@ -699,13 +707,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ── Team ("Hey!") section ──
-   Given its own stacking context, positioned above the process
-   section in paint order (position: relative + z-index), and given a
-   generous top margin so there's clear breathing room after the video
-   stack fully releases before this section's content begins — this
-   combination is what guarantees the Team section always renders
-   cleanly on top of, and separated from, anything left over from the
-   process section above it. ── */
+   Its own stacking context (isolation: isolate) and higher z-index
+   than anything inside .process-section, so it is guaranteed to paint
+   above the process section as it scrolls into view, regardless of
+   the process section's internal sticky/scroll state. ── */
 .hey-section {
   position: relative;
   isolation: isolate;
@@ -969,14 +974,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    Process section: the text column is sticky just below the nav pill,
    so it stays visible the entire time the user scrolls through the
    process section. The video pin's sticky `top` is computed live in
-   JS from the text column's real height (see useMobileVideoPinTop) —
-   the CSS `top` values below are only a rough fallback for the split
-   second before that JS measurement runs on mount.
-
-   Spacing increased: more room between the nav pill and "OUR PROCESS"
-   (padding-top on .process-section), and a wider gap between the
-   sticky text block and the video card beneath it (MOBILE_STACK_GAP
-   in Landing.jsx, reflected here in the fallback `top` values). */
+   JS (useMobileVideoPinTop) from the text column's real height — the
+   CSS `top` values below are only a rough fallback for the split
+   second before that JS measurement runs on mount. */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -1001,7 +1001,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-sticky-col {
     position: sticky;
     top: 84px;
-    z-index: 60;
     transform: none;
     background: transparent;
     box-shadow: none;
@@ -1011,7 +1010,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-title { font-size: 21px; line-height: 1.22; }
   .process-desc { font-size: 13.5px; line-height: 1.5; }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 272px; height: 46vh; }
+  .process-video-pin { top: 280px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 
   .process-video-caption {
@@ -1099,7 +1098,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-sticky-col { top: 76px; padding-top: 16px; }
   .process-title { font-size: 19px; }
   .process-desc { font-size: 12.5px; }
-  .process-video-pin { top: 246px; height: 42vh; }
+  .process-video-pin { top: 250px; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1146,7 +1145,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-sticky-col { top: 70px; }
   .process-title { font-size: 18px; }
   .process-desc { font-size: 12px; }
-  .process-video-pin { top: 226px; height: 40vh; }
+  .process-video-pin { top: 230px; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 
   .linkedin-card {
