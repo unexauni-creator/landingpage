@@ -569,8 +569,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    position offset by STACK_GAP px per layer — so once locked, a thin
    sliver of each earlier card stays visible beneath the current top
    card. That sliver is always a STILL FRAME, never playing video,
-   because playback is controlled in JS (see the play/pause effect in
-   Landing.jsx) so only the active layer's video actually plays.
+   because playback is controlled in JS so only the active layer's
+   video actually plays.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -938,11 +938,13 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* ══════════════ Mobile / Tablet — same behavior as desktop, stacked
-   vertically: text sits in normal document flow (no floating card,
-   no separate sticky background), directly above the sticky video
-   stack — mirroring the desktop's "text, then video" arrangement in
-   a single column instead of a side-by-side grid. ══════════════ */
+/* ══════════════ Mobile / Tablet — text and video BOTH stay pinned
+   and visible together while scrolling, stacked vertically. The text
+   block is sticky at the top (just below the nav) with a reserved
+   min-height so it doesn't jump between slides of different length;
+   the video pin is sticky directly beneath it, at a top offset large
+   enough to clear the text block. Both remain on screen at once,
+   matching the desktop's "text + video together" behavior. ══════════ */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -961,22 +963,25 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-section {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 0;
     padding-top: 100px;
   }
   .process-sticky-col {
-    position: static;
+    position: sticky;
+    top: 84px;
+    z-index: 40;
     transform: none;
-    background: none;
+    background: transparent;
     box-shadow: none;
-    padding: 0 4px;
+    padding: 14px 4px 10px;
     border-radius: 0;
-    gap: 12px;
+    gap: 10px;
+    min-height: 200px;
   }
-  .process-title { font-size: 24px; }
-  .process-desc { font-size: 14px; }
+  .process-title { font-size: 22px; }
+  .process-desc { font-size: 13.5px; }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { height: 46vh; }
+  .process-video-pin { top: 288px !important; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 }
 
@@ -1030,6 +1035,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-name { font-size: 14px; }
   .linkedin-card-cta { font-size: 11px; padding: 6px 12px; }
 
+  .process-sticky-col { top: 76px; min-height: 190px; }
+  .process-video-pin { top: 266px !important; height: 42vh; }
+  .process-video-frame { max-height: 42vh; }
+
   .hey-section { margin-top: 90px; padding: 56px 16px; }
   .hey-title { font-size: 40px; }
 
@@ -1069,4 +1078,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     padding: 8px 5px;
   }
   .research-zoom-stat-value { font-size: 19px; }
+
+  .process-sticky-col { top: 70px; min-height: 175px; }
+  .process-video-pin { top: 245px !important; height: 40vh; }
+  .process-video-frame { max-height: 40vh; }
 }
