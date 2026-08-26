@@ -33,14 +33,25 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 // thin sliver of every earlier card stays visible beneath the current
 // top card. Only the currently-active layer actually plays its video
 // — every other layer is paused, so a peeking sliver is a still frame.
-// On mobile, each card also carries its own caption (title) baked
-// into the card itself — see .process-video-caption — so text can
-// never separate from or overlap the video it describes.
-const STACK_TOP = 110;       // px offset where the video frame pins, clear of the nav
+const STACK_TOP = 110;       // desktop: px offset where the video frame pins, clear of the nav
 const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
 const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
 const TAIL_VH = 60;          // extra dwell after the last video locks, before the section releases
 const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
+
+// Mobile-only: sticky offset for the text column (below the nav pill),
+// per breakpoint. The video pin's sticky top is then computed live in
+// JS as NAV_OFFSET + (measured text column height) + a small gap —
+// never a guessed constant — so the two sticky elements can never
+// overlap or drift apart, however long the text runs.
+function getMobileNavOffset() {
+  if (typeof window === "undefined") return 84;
+  const w = window.innerWidth;
+  if (w <= 480) return 70;
+  if (w <= 768) return 76;
+  return 84;
+}
+const MOBILE_STACK_GAP = 14; // px gap between the sticky text and the sticky video below it
 
 const PROCESS_STEPS = [
   {
@@ -298,6 +309,49 @@ function useVideoStack(count) {
   return [wrapperRef, activeIndex, layerProgress];
 }
 
+// Measures the real rendered height of the mobile sticky text column
+// (which changes between steps and across screen widths) and returns
+// the exact px `top` the video pin below it needs, so the two sticky
+// elements can never overlap. Returns null on desktop (>900px), where
+// this mobile-only stacking doesn't apply.
+function useMobileVideoPinTop(textRef) {
+  const [videoTop, setVideoTop] = useState(null);
+
+  useEffect(() => {
+    function update() {
+      if (typeof window === "undefined") return;
+      if (window.innerWidth > 900) {
+        setVideoTop(null);
+        return;
+      }
+      const el = textRef.current;
+      if (!el) return;
+      const navOffset = getMobileNavOffset();
+      const height = el.offsetHeight;
+      setVideoTop(navOffset + height + MOBILE_STACK_GAP);
+    }
+
+    update();
+    const settleTimer = setTimeout(update, 300);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && textRef.current) {
+      ro = new ResizeObserver(update);
+      ro.observe(textRef.current);
+    }
+
+    window.addEventListener("resize", update);
+
+    return () => {
+      window.removeEventListener("resize", update);
+      clearTimeout(settleTimer);
+      if (ro) ro.disconnect();
+    };
+  }, [textRef]);
+
+  return videoTop;
+}
+
 function useActiveSection(ids) {
   const [active, setActive] = useState(ids[0]);
 
@@ -367,6 +421,8 @@ export default function Landing() {
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
   const processVideoRefs = useRef([]);
+  const processTextColRef = useRef(null);
+  const mobileVideoTop = useMobileVideoPinTop(processTextColRef);
 
   const navIds = NAV_ITEMS.map(function (n) {
     return n.id;
@@ -389,6 +445,7 @@ export default function Landing() {
   const activeProcessStep = PROCESS_STEPS[activeStep];
   const videoStackHeight =
     (PROCESS_STEPS.length - 1) * SEGMENT_VH + 100 + TAIL_VH;
+  const videoPinTop = mobileVideoTop != null ? mobileVideoTop : STACK_TOP;
 
   useEffect(() => {
     const video = researchVideoRef.current;
@@ -565,7 +622,7 @@ export default function Landing() {
       </section>
 
       <section className="process-section" id="process">
-        <div className="process-sticky-col">
+        <div className="process-sticky-col" ref={processTextColRef}>
           <div className="landing-hero-eyebrow process-eyebrow">
             Our process <span className="process-step-count">{activeStep + 1} / {PROCESS_STEPS.length}</span>
           </div>
@@ -585,7 +642,7 @@ export default function Landing() {
           ref={videoStackRef}
           style={{ height: `${videoStackHeight}vh` }}
         >
-          <div className="process-video-pin" style={{ top: `${STACK_TOP}px` }}>
+          <div className="process-video-pin" style={{ top: `${videoPinTop}px` }}>
             {PROCESS_STEPS.map((step, i) => {
               const p = layerProgress[i] ?? (i === 0 ? 1 : 0);
               const restOffset = i * STACK_GAP;
@@ -609,11 +666,9 @@ export default function Landing() {
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
 
-                  {/* Mobile-only caption baked into the card itself — this
-                      guarantees text can never separate from or overlap
-                      the video it belongs to, since it travels with the
-                      card as one element. Hidden on desktop, where the
-                      side text column already covers this. */}
+                  {/* Mobile-only caption baked into the card itself,
+                      as an extra label on the video. Hidden on desktop,
+                      where the side text column already covers this. */}
                   <div className="process-video-caption">
                     <span className="process-video-caption-count">
                       {i + 1} / {PROCESS_STEPS.length}

@@ -572,9 +572,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    because playback is controlled in JS so only the active layer's
    video actually plays.
 
-   .process-video-caption is a caption baked into each video card,
-   shown ONLY on mobile — see the media query below. On desktop the
-   side text column already provides this, so it stays hidden there.
+   On mobile (<=900px), BOTH the text column and the video pin are
+   sticky, stacked vertically. The video pin's `top` is computed live
+   in JS (useMobileVideoPinTop) from the text column's real rendered
+   height via ResizeObserver — not a guessed constant — so the two
+   sticky elements can never overlap or drift apart, however long the
+   text runs or however the breakpoint's font metrics differ.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -947,14 +950,14 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   Process section: the intro text block (Our process X/Y, title,
-   description, dots) sits in NORMAL FLOW at the top — no longer
-   independently sticky, so there's no fragile pixel-offset math that
-   can drift out of sync with a separately-sticky video and overlap it.
-   As the user scrolls past this intro block into the video stack, each
-   video card carries its OWN caption baked directly into itself
-   (.process-video-caption) — so text and video can never separate or
-   collide, since they're the same element. */
+   Process section: the text column is sticky (position: sticky) just
+   below the nav pill, so it stays visible the entire time the user
+   scrolls through the process section. Its `top` value here matches
+   getMobileNavOffset() in JS exactly. The video pin below it gets its
+   sticky `top` from an inline style computed live in JS (see
+   useMobileVideoPinTop) — the CSS `top` below is only a rough
+   fallback shown for a split second before that JS measurement runs
+   on mount, to avoid a layout flash. */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -973,21 +976,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-section {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 0;
     padding-top: 100px;
   }
   .process-sticky-col {
-    position: static;
+    position: sticky;
+    top: 84px;
+    z-index: 60;
     transform: none;
     background: transparent;
     box-shadow: none;
-    padding: 0 4px;
-    gap: 10px;
+    padding: 14px 4px 0;
+    gap: 8px;
   }
-  .process-title { font-size: 23px; }
-  .process-desc { font-size: 14px; }
+  .process-title { font-size: 21px; line-height: 1.22; }
+  .process-desc { font-size: 13.5px; line-height: 1.5; }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 90px; height: 46vh; }
+  .process-video-pin { top: 260px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 
   .process-video-caption {
@@ -1071,7 +1076,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-name { font-size: 16px; }
   .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
 
-  .process-video-pin { top: 84px; height: 42vh; }
+  .process-sticky-col { top: 76px; padding-top: 12px; }
+  .process-title { font-size: 19px; }
+  .process-desc { font-size: 12.5px; }
+  .process-video-pin { top: 236px; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1114,7 +1122,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .research-zoom-stat-value { font-size: 19px; }
 
-  .process-video-pin { top: 78px; height: 40vh; }
+  .process-sticky-col { top: 70px; }
+  .process-title { font-size: 18px; }
+  .process-desc { font-size: 12px; }
+  .process-video-pin { top: 218px; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 
   .linkedin-card {
