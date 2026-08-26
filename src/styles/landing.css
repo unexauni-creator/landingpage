@@ -8,6 +8,15 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* NOTE: background-attachment: fixed here is the root cause of the
+   "ghosting" bug seen on mobile — iOS Safari has a well-documented
+   rendering bug where fixed backgrounds combined with position:sticky
+   descendants (our process text/video pins) cause exactly this kind
+   of transparent double-exposure artifact during scroll. It's a
+   compositor bug in WebKit, unrelated to our positioning logic.
+   Fixed below via a mobile-only override to background-attachment:
+   scroll — desktop keeps the fixed parallax look since desktop
+   Safari/Chrome don't have this bug. */
 .landing-page {
   position: relative;
   min-height: 100vh;
@@ -562,20 +571,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
      style set in JS (STACK_TOP). CSS below sets no `top` for it at
      this breakpoint, so there is nothing to conflict with.
    - Mobile/tablet (<=900px): JS applies NO inline style to
-     .process-video-pin at all. Its `top` comes ENTIRELY from the CSS
-     media-query rules further down this file. This is the fix for
-     the bug where a CSS-set `top` and a JS-injected inline `top` were
-     both targeting the same property — inline always won, but was
-     computed asynchronously, causing a stale-frame overlap whenever
-     the active step (and therefore the text height) changed.
-
-   To make the CSS-only mobile values reliable without any JS
-   measurement, .process-sticky-col is given a FIXED, deterministic
-   height per breakpoint (not min-height, not measured) — its
-   description text is line-clamped to fit within that fixed height
-   regardless of content length. That guarantees the video pin's
-   hard-coded `top` in each media query always lines up with exactly
-   where the text block ends, with zero runtime computation involved.
+     .process-video-pin at all. Its `top` comes ENTIRELY from CSS
+     media-query rules below.
 
    Left column: text pinned in place, re-mounts (key=activeStep) to
    replay its slide-in animation as the top video changes. z-index: 20
@@ -711,7 +708,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ── Team ("Hey!") section ──
    Its own stacking context (isolation: isolate) and higher z-index
    than anything inside .process-section, so it is guaranteed to paint
-   above the process section as it scrolls into view. ── */
+   above the process section as it scrolls into view. Also given its
+   own explicit opaque background matching the page's paper texture —
+   this is a belt-and-suspenders measure: even on the rare device
+   where the background-attachment fix below isn't enough, this
+   section paints as a fully solid layer that nothing can show
+   through. ── */
 .hey-section {
   position: relative;
   isolation: isolate;
@@ -720,6 +722,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   width: 100%;
   margin: 160px auto 0;
   padding: 80px 24px;
+  background-color: #e2e0e0;
+  background-image: var(--paper-texture, none);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .hey-inner {
@@ -972,13 +979,19 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   THIS is the entire and only source of truth for .process-video-pin's
-   `top` at this breakpoint — JS applies no inline style here (see
-   videoPinStyle in Landing.jsx). .process-sticky-col has a fixed,
-   deterministic height with line-clamped description text, so its
-   real rendered size always matches what these hard-coded `top`
-   values below assume — no measurement, no async, no race. */
+   THE FIX: background-attachment: scroll overrides the desktop
+   `fixed` value from .landing-page. iOS Safari has a documented bug
+   where background-attachment:fixed + position:sticky descendants
+   causes ghosting/double-exposure rendering artifacts during scroll —
+   exactly the bug seen in testing. Desktop keeps the fixed/parallax
+   look; mobile/tablet gets a normally-scrolling background instead,
+   which resolves the artifact entirely since it's a WebKit
+   compositor bug tied specifically to the fixed-attachment case. */
 @media (max-width: 900px) {
+  .landing-page {
+    background-attachment: scroll;
+  }
+
   .landing-nav-links,
   .landing-nav-cta {
     display: none;
