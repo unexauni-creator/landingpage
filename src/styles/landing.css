@@ -8,15 +8,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* NOTE: background-attachment: fixed here is the root cause of the
-   "ghosting" bug seen on mobile — iOS Safari has a well-documented
-   rendering bug where fixed backgrounds combined with position:sticky
-   descendants (our process text/video pins) cause exactly this kind
-   of transparent double-exposure artifact during scroll. It's a
-   compositor bug in WebKit, unrelated to our positioning logic.
-   Fixed below via a mobile-only override to background-attachment:
-   scroll — desktop keeps the fixed parallax look since desktop
-   Safari/Chrome don't have this bug. */
 .landing-page {
   position: relative;
   min-height: 100vh;
@@ -566,24 +557,21 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ══════════════════════════════════════════════════════════════════
    Process section
 
-   POSITIONING SYSTEM (single source of truth per breakpoint):
-   - Desktop (>900px): .process-video-pin's `top` comes from an INLINE
-     style set in JS (STACK_TOP). CSS below sets no `top` for it at
-     this breakpoint, so there is nothing to conflict with.
-   - Mobile/tablet (<=900px): JS applies NO inline style to
-     .process-video-pin at all. Its `top` comes ENTIRELY from CSS
-     media-query rules below.
+   Desktop (>900px): text column is sticky, pinned alongside the
+   sticky video stack, updating as the active step changes — unchanged
+   from before.
 
-   Left column: text pinned in place, re-mounts (key=activeStep) to
-   replay its slide-in animation as the top video changes. z-index: 20
-   as a safety net so it always renders above the video layer.
-
-   Right column: true stacked scroll-driven videos, z-index: 5. Every
-   video is its own absolutely-positioned layer with its own
-   scroll-driven translateY, animating up from below the frame and
-   locking with a STACK_GAP px offset per layer so a still-frame
-   sliver of each earlier card stays visible beneath the current top
-   card.
+   Mobile/tablet (<=900px): the text column is NOT sticky. It sits in
+   normal document flow above the video stack and scrolls away
+   naturally as the page scrolls, exactly like ordinary page content.
+   This is the actual fix for the recurring overlap bug: with only ONE
+   sticky element in this section on mobile (the video pin), there is
+   no second sticky element left to ever collide, race, or ghost
+   against it — the underlying cause of every previous variant of this
+   bug. The video itself still carries its own step number and title
+   baked directly into the card (.process-video-caption, already
+   defined below), so the video remains fully labeled on its own once
+   the text above has scrolled out of view.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -705,15 +693,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: none;
 }
 
-/* ── Team ("Hey!") section ──
-   Its own stacking context (isolation: isolate) and higher z-index
-   than anything inside .process-section, so it is guaranteed to paint
-   above the process section as it scrolls into view. Also given its
-   own explicit opaque background matching the page's paper texture —
-   this is a belt-and-suspenders measure: even on the rare device
-   where the background-attachment fix below isn't enough, this
-   section paints as a fully solid layer that nothing can show
-   through. ── */
+/* ── Team ("Hey!") section ── */
 .hey-section {
   position: relative;
   isolation: isolate;
@@ -979,14 +959,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   THE FIX: background-attachment: scroll overrides the desktop
-   `fixed` value from .landing-page. iOS Safari has a documented bug
-   where background-attachment:fixed + position:sticky descendants
-   causes ghosting/double-exposure rendering artifacts during scroll —
-   exactly the bug seen in testing. Desktop keeps the fixed/parallax
-   look; mobile/tablet gets a normally-scrolling background instead,
-   which resolves the artifact entirely since it's a WebKit
-   compositor bug tied specifically to the fixed-attachment case. */
+   THE FIX: .process-sticky-col is position: static here — it is no
+   longer sticky at all on mobile/tablet. It sits in normal flow above
+   the video stack, scrolling away naturally like any other page
+   content once the user scrolls past it. Only .process-video-pin
+   remains sticky. With exactly one sticky element in this section
+   instead of two, there is nothing left that can ever overlap,
+   race, or ghost against anything else — this removes the entire
+   class of bug that kept resurfacing across every previous attempt.
+   The video's own caption (.process-video-caption) keeps it labeled
+   once the text above has scrolled out of view. */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
@@ -1009,31 +991,26 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-section {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 28px;
     padding-top: 130px;
   }
   .process-sticky-col {
-    position: sticky;
-    top: 84px;
+    position: static;
     transform: none;
     background: transparent;
     box-shadow: none;
-    padding: 20px 4px 0;
-    gap: 8px;
-    height: 210px;
-    overflow: hidden;
+    padding: 0 4px;
+    gap: 10px;
+    height: auto;
+    overflow: visible;
   }
   .process-title { font-size: 21px; line-height: 1.22; }
   .process-desc {
     font-size: 13.5px;
     line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 294px; height: 46vh; }
+  .process-video-pin { top: 90px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 
   .process-video-caption {
@@ -1118,10 +1095,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
 
   .process-section { padding-top: 110px; }
-  .process-sticky-col { top: 76px; padding-top: 16px; height: 188px; }
   .process-title { font-size: 19px; }
-  .process-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 264px; height: 42vh; }
+  .process-desc { font-size: 12.5px; }
+  .process-video-pin { top: 76px; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1165,10 +1141,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-stat-value { font-size: 19px; }
 
   .process-section { padding-top: 100px; }
-  .process-sticky-col { top: 70px; height: 172px; }
   .process-title { font-size: 18px; }
-  .process-desc { font-size: 12px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 244px; height: 40vh; }
+  .process-desc { font-size: 12px; }
+  .process-video-pin { top: 70px; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 
   .linkedin-card {
