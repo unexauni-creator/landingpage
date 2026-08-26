@@ -566,20 +566,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    own inline transform: translateY, updated directly from scroll
    progress via JS. Each video starts pushed fully below the pinned
    frame and animates up during its segment, holding at a resting
-   position offset by STACK_GAP px per layer — so once locked, a thin
+   position offset by STACK_GAP px per layer, so once locked, a thin
    sliver of each earlier card stays visible beneath the current top
    card. That sliver is always a STILL FRAME, never playing video,
    because playback is controlled in JS so only the active layer's
    video actually plays.
 
-   On mobile (<=900px), BOTH the text column and the video pin are
-   sticky, stacked vertically. The video pin's `top` is computed live
-   in JS (useMobileVideoPinTop) from the text column's real rendered
-   height via ResizeObserver — not a guessed constant — so the two
-   sticky elements can never overlap or drift apart, however long the
-   text runs or however the breakpoint's font metrics differ.
+   .process-section gets `isolation: isolate` so every z-index used
+   inside it (sticky text col, sticky video pin, stacked video frames)
+   is contained to its OWN stacking context and can never paint above
+   sections that come after it in the document. That is what fixes the
+   "cards render on top of the Hey/Team section" bug: as the sticky
+   elements naturally release at the bottom of this section, they are
+   guaranteed to sit behind whatever comes next, never in front of it.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
+  position: relative;
+  isolation: isolate;
   max-width: 1160px;
   width: 100%;
   margin: 0 auto;
@@ -695,8 +698,18 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: none;
 }
 
-/* ── Team ("Hey!") section ── */
+/* ── Team ("Hey!") section ──
+   Given its own stacking context, positioned above the process
+   section in paint order (position: relative + z-index), and given a
+   generous top margin so there's clear breathing room after the video
+   stack fully releases before this section's content begins — this
+   combination is what guarantees the Team section always renders
+   cleanly on top of, and separated from, anything left over from the
+   process section above it. ── */
 .hey-section {
+  position: relative;
+  isolation: isolate;
+  z-index: 10;
   max-width: 1160px;
   width: 100%;
   margin: 160px auto 0;
@@ -809,6 +822,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 /* ── Footer ── */
 .landing-footer {
+  position: relative;
+  isolation: isolate;
+  z-index: 10;
   max-width: 1160px;
   width: 100%;
   margin: 160px auto 0;
@@ -950,14 +966,17 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   Process section: the text column is sticky (position: sticky) just
-   below the nav pill, so it stays visible the entire time the user
-   scrolls through the process section. Its `top` value here matches
-   getMobileNavOffset() in JS exactly. The video pin below it gets its
-   sticky `top` from an inline style computed live in JS (see
-   useMobileVideoPinTop) — the CSS `top` below is only a rough
-   fallback shown for a split second before that JS measurement runs
-   on mount, to avoid a layout flash. */
+   Process section: the text column is sticky just below the nav pill,
+   so it stays visible the entire time the user scrolls through the
+   process section. The video pin's sticky `top` is computed live in
+   JS from the text column's real height (see useMobileVideoPinTop) —
+   the CSS `top` values below are only a rough fallback for the split
+   second before that JS measurement runs on mount.
+
+   Spacing increased: more room between the nav pill and "OUR PROCESS"
+   (padding-top on .process-section), and a wider gap between the
+   sticky text block and the video card beneath it (MOBILE_STACK_GAP
+   in Landing.jsx, reflected here in the fallback `top` values). */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -977,7 +996,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-section {
     grid-template-columns: 1fr;
     gap: 0;
-    padding-top: 100px;
+    padding-top: 130px;
   }
   .process-sticky-col {
     position: sticky;
@@ -986,13 +1005,13 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     transform: none;
     background: transparent;
     box-shadow: none;
-    padding: 14px 4px 0;
-    gap: 8px;
+    padding: 20px 4px 0;
+    gap: 10px;
   }
   .process-title { font-size: 21px; line-height: 1.22; }
   .process-desc { font-size: 13.5px; line-height: 1.5; }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 260px; height: 46vh; }
+  .process-video-pin { top: 272px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 
   .process-video-caption {
@@ -1076,10 +1095,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-name { font-size: 16px; }
   .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
 
-  .process-sticky-col { top: 76px; padding-top: 12px; }
+  .process-section { padding-top: 110px; }
+  .process-sticky-col { top: 76px; padding-top: 16px; }
   .process-title { font-size: 19px; }
   .process-desc { font-size: 12.5px; }
-  .process-video-pin { top: 236px; height: 42vh; }
+  .process-video-pin { top: 246px; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1122,10 +1142,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .research-zoom-stat-value { font-size: 19px; }
 
+  .process-section { padding-top: 100px; }
   .process-sticky-col { top: 70px; }
   .process-title { font-size: 18px; }
   .process-desc { font-size: 12px; }
-  .process-video-pin { top: 218px; height: 40vh; }
+  .process-video-pin { top: 226px; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 
   .linkedin-card {

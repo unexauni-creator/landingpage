@@ -51,7 +51,7 @@ function getMobileNavOffset() {
   if (w <= 768) return 76;
   return 84;
 }
-const MOBILE_STACK_GAP = 14; // px gap between the sticky text and the sticky video below it
+const MOBILE_STACK_GAP = 26; // px gap between the sticky text and the sticky video below it
 
 const PROCESS_STEPS = [
   {
