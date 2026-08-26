@@ -571,6 +571,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
    card. That sliver is always a STILL FRAME, never playing video,
    because playback is controlled in JS so only the active layer's
    video actually plays.
+
+   .process-video-caption is a caption baked into each video card,
+   shown ONLY on mobile — see the media query below. On desktop the
+   side text column already provides this, so it stays hidden there.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   max-width: 1160px;
@@ -682,6 +686,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.process-video-caption {
+  display: none;
 }
 
 /* ── Team ("Hey!") section ── */
@@ -938,15 +946,15 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* ══════════════ Mobile / Tablet — text and video BOTH stay pinned
-   and visible together while scrolling, stacked vertically. The text
-   block gets a FIXED height (identical across all 3 steps, not
-   min-height) so its box never grows into the video's space no
-   matter how long a given step's copy is; overflow:hidden is a
-   safety net for the rare case text still runs long. The video pin's
-   top offset is then set to exactly text-top + text-height + a small
-   gap, so the two sticky elements always stack with zero overlap and
-   zero unwanted space between them. ══════════════ */
+/* ══════════════ Mobile / Tablet ══════════════
+   Process section: the intro text block (Our process X/Y, title,
+   description, dots) sits in NORMAL FLOW at the top — no longer
+   independently sticky, so there's no fragile pixel-offset math that
+   can drift out of sync with a separately-sticky video and overlap it.
+   As the user scrolls past this intro block into the video stack, each
+   video card carries its OWN caption baked directly into itself
+   (.process-video-caption) — so text and video can never separate or
+   collide, since they're the same element. */
 @media (max-width: 900px) {
   .landing-nav-links,
   .landing-nav-cta {
@@ -965,34 +973,50 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-section {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 24px;
     padding-top: 100px;
   }
   .process-sticky-col {
-    position: sticky;
-    top: 84px;
-    z-index: 40;
+    position: static;
     transform: none;
     background: transparent;
     box-shadow: none;
-    padding: 14px 4px 0;
-    border-radius: 0;
-    gap: 8px;
-    height: 224px;
-    overflow: hidden;
+    padding: 0 4px;
+    gap: 10px;
   }
-  .process-title { font-size: 21px; line-height: 1.2; }
-  .process-desc {
-    font-size: 13px;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .process-title { font-size: 23px; }
+  .process-desc { font-size: 14px; }
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 308px !important; height: 46vh; }
+  .process-video-pin { top: 90px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
+
+  .process-video-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 16px 18px 18px;
+    background: linear-gradient(to top, rgba(20,14,10,0.78) 0%, rgba(20,14,10,0.35) 55%, rgba(20,14,10,0) 100%);
+    color: #fff8f2;
+  }
+  .process-video-caption-count {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .process-video-caption-title {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1.25;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
 }
 
 /* ══════════════ Mobile ══════════════ */
@@ -1014,9 +1038,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
 
   .research-zoom-sticky { padding-top: 20px; }
+  .research-zoom-heading { padding: 0 24px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
-  .folder-visual { width: 92vw; }
+  .folder-visual { width: 74vw; }
   .folder-back { inset: -10px; }
   .research-zoom-fade { gap: 16px; }
 
@@ -1037,18 +1062,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-stat-value { font-size: 22px; }
 
   .linkedin-card {
-    width: 100%;
-    max-width: 260px;
-    height: 130px;
-    padding: 14px;
+    width: min(320px, 84vw);
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-width: 320px;
+    padding: 22px;
   }
-  .linkedin-card-name { font-size: 14px; }
-  .linkedin-card-cta { font-size: 11px; padding: 6px 12px; }
+  .linkedin-card-name { font-size: 16px; }
+  .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
 
-  .process-sticky-col { top: 76px; height: 200px; padding-top: 12px; }
-  .process-title { font-size: 19px; }
-  .process-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 280px !important; height: 42vh; }
+  .process-video-pin { top: 84px; height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1091,9 +1114,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .research-zoom-stat-value { font-size: 19px; }
 
-  .process-sticky-col { top: 70px; height: 186px; }
-  .process-title { font-size: 18px; }
-  .process-desc { font-size: 12px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 256px !important; height: 40vh; }
+  .process-video-pin { top: 78px; height: 40vh; }
   .process-video-frame { max-height: 40vh; }
+
+  .linkedin-card {
+    width: min(280px, 88vw);
+    padding: 18px;
+  }
+  .linkedin-card-name { font-size: 15px; }
 }

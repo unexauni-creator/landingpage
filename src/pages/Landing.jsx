@@ -31,9 +31,11 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 // below the frame and animates up during its dedicated segment, then
 // holds at a resting position offset by STACK_GAP px per layer, so a
 // thin sliver of every earlier card stays visible beneath the current
-// top card. ONLY the currently-active layer actually plays its video
-// — every other layer is paused, so a peeking sliver is a still frame,
-// never a second (or third) video visibly playing underneath.
+// top card. Only the currently-active layer actually plays its video
+// — every other layer is paused, so a peeking sliver is a still frame.
+// On mobile, each card also carries its own caption (title) baked
+// into the card itself — see .process-video-caption — so text can
+// never separate from or overlap the video it describes.
 const STACK_TOP = 110;       // px offset where the video frame pins, clear of the nav
 const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
 const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
@@ -606,6 +608,18 @@ export default function Landing() {
                   ) : (
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
+
+                  {/* Mobile-only caption baked into the card itself — this
+                      guarantees text can never separate from or overlap
+                      the video it belongs to, since it travels with the
+                      card as one element. Hidden on desktop, where the
+                      side text column already covers this. */}
+                  <div className="process-video-caption">
+                    <span className="process-video-caption-count">
+                      {i + 1} / {PROCESS_STEPS.length}
+                    </span>
+                    <h3 className="process-video-caption-title">{step.title}</h3>
+                  </div>
                 </div>
               );
             })}
