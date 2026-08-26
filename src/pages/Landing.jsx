@@ -36,9 +36,8 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 const STACK_TOP = 110;       // desktop: px offset where the video frame pins, clear of the nav
 const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
 const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
-const TAIL_VH = 60;          // extra dwell after the last video locks, before the section releases
+const TAIL_VH = 130;         // extra dwell after the last video locks — the cards stay visibly fixed here before the next section begins
 const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
-
 // Mobile-only: sticky offset for the text column (below the nav pill),
 // per breakpoint. The video pin's sticky top is then computed live in
 // JS as NAV_OFFSET + (measured text column height) + a small gap —
