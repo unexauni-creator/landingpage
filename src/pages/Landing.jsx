@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 const CARDS = [
@@ -41,9 +41,13 @@ const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards st
 
 // Mobile-only: sticky offset for the text column (below the nav pill),
 // per breakpoint. The video pin's sticky top is then computed live in
-// JS as NAV_OFFSET + (measured text column height) + a small gap —
-// never a guessed constant — so the two sticky elements can never
-// overlap or drift apart, however long the text runs.
+// JS as NAV_OFFSET + (measured text column height) + a gap — never a
+// guessed constant — so the two sticky elements can never overlap.
+// This measurement runs in useLayoutEffect (synchronously, before
+// paint) rather than useEffect, so there is never a frame where the
+// video pin uses a stale top value from the previous step's (usually
+// shorter) text height — that one-frame mismatch was the cause of the
+// text-over-mockup overlap during scroll transitions.
 function getMobileNavOffset() {
   if (typeof window === "undefined") return 84;
   const w = window.innerWidth;
@@ -51,7 +55,7 @@ function getMobileNavOffset() {
   if (w <= 768) return 76;
   return 84;
 }
-const MOBILE_STACK_GAP = 26; // px gap between the sticky text and the sticky video below it
+const MOBILE_STACK_GAP = 32; // px gap between the sticky text and the sticky video below it
 
 const PROCESS_STEPS = [
   {
@@ -314,10 +318,18 @@ function useVideoStack(count) {
 // the exact px `top` the video pin below it needs, so the two sticky
 // elements can never overlap. Returns null on desktop (>900px), where
 // this mobile-only stacking doesn't apply.
-function useMobileVideoPinTop(textRef) {
+//
+// Runs in useLayoutEffect: the measurement + state update happen
+// synchronously after the DOM mutates (e.g. activeStep changes,
+// remounting .process-active-text with new text) but BEFORE the
+// browser paints that frame. This eliminates the one-frame window
+// where the video's sticky top still reflected the previous, usually
+// shorter, step's text height — that stale-frame mismatch is what
+// caused the video to render overlapping the text during scroll.
+function useMobileVideoPinTop(textRef, activeStep) {
   const [videoTop, setVideoTop] = useState(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     function update() {
       if (typeof window === "undefined") return;
       if (window.innerWidth > 900) {
@@ -332,7 +344,6 @@ function useMobileVideoPinTop(textRef) {
     }
 
     update();
-    const settleTimer = setTimeout(update, 300);
 
     let ro;
     if (typeof ResizeObserver !== "undefined" && textRef.current) {
@@ -344,10 +355,11 @@ function useMobileVideoPinTop(textRef) {
 
     return () => {
       window.removeEventListener("resize", update);
-      clearTimeout(settleTimer);
       if (ro) ro.disconnect();
     };
-  }, [textRef]);
+    // Re-run synchronously whenever the active step changes, since the
+    // text content (and therefore its height) changes with it.
+  }, [textRef, activeStep]);
 
   return videoTop;
 }
@@ -422,7 +434,7 @@ export default function Landing() {
   const researchVideoRef = useRef(null);
   const processVideoRefs = useRef([]);
   const processTextColRef = useRef(null);
-  const mobileVideoTop = useMobileVideoPinTop(processTextColRef);
+  const mobileVideoTop = useMobileVideoPinTop(processTextColRef, activeStep);
 
   const navIds = NAV_ITEMS.map(function (n) {
     return n.id;
@@ -666,8 +678,8 @@ export default function Landing() {
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
 
-                  {/* Mobile-only caption baked into the card itself,
-                      as an extra label on the video. Hidden on desktop,
+                  {/* Mobile-only caption baked into the card itself, as
+                      an extra label on the video. Hidden on desktop,
                       where the side text column already covers this. */}
                   <div className="process-video-caption">
                     <span className="process-video-caption-count">
