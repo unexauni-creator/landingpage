@@ -33,26 +33,21 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 // thin sliver of every earlier card stays visible beneath the current
 // top card. Only the currently-active layer actually plays its video
 // — every other layer is paused, so a peeking sliver is a still frame.
-//
-// POSITIONING: there is exactly ONE system controlling
-// .process-video-pin's `top` per breakpoint — never two at once.
-//  - Desktop (>900px): JS sets an inline `top: STACK_TOP px` style.
-//  - Mobile/tablet (<=900px): JS sets NO inline style at all; CSS
-//    media-query rules are the sole source of truth for `top` there.
-// This is what eliminates the previous bug, where CSS media-query
-// `top` values and a JS-measured inline `top` were both targeting the
-// same element — the inline value always won, but it was computed
-// asynchronously (useEffect + ResizeObserver), so for one frame after
-// any DOM change (e.g. switching process steps) the video used a
-// stale position while the text had already updated, producing a
-// visible overlap. With CSS as the single mobile source of truth, and
-// the text column below given a fixed, deterministic height (see
-// .process-sticky-col in the CSS), there is nothing left to race.
 const STACK_TOP = 110;       // desktop: px offset where the video frame pins, clear of the nav
 const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
 const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
 const TAIL_VH = 130;         // extra dwell after the last video locks — the cards stay visibly fixed here before the next section begins
 const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
+
+// Mobile-only: how far (px) the text column travels upward, driven
+// DIRECTLY by the last card's own scroll progress (layerProgress at
+// index count-1) — not by native sticky-release timing, which proved
+// unreliable to synchronize exactly with the video's motion across
+// many attempts. This guarantees text is provably stationary while
+// the last card is off-screen or dwelling, then moves in perfect
+// lockstep with it as it slides up and locks, and finishes moving
+// off-screen at the exact moment the card finishes locking.
+const MOBILE_TEXT_EXIT_DISTANCE = 340;
 
 function useIsDesktop(breakpoint = 900) {
   const [isDesktop, setIsDesktop] = useState(() =>
@@ -277,7 +272,9 @@ function GapStat({ label, value, start, delay }) {
 
 // Drives the whole video-stack effect. Computes, on every scroll tick:
 //  - layerProgress[i]: 0→1 for how far video i has travelled into its
-//    locked position (used for translateY on each video layer)
+//    locked position (used for translateY on each video layer AND,
+//    on mobile, to drive the text column's exit translateY in sync
+//    with the last card)
 //  - activeIndex: which video is currently "on top" — used both to
 //    drive the text column, and to decide which single video layer is
 //    allowed to actually play (see the play/pause effect below)
@@ -422,9 +419,19 @@ export default function Landing() {
 
   // Only inject an inline `top` on desktop. On mobile/tablet, no
   // inline style is applied at all — CSS media queries are the only
-  // thing controlling .process-video-pin's position there, so there
-  // is never a competing/racing second system.
+  // thing controlling .process-video-pin's position there.
   const videoPinStyle = isDesktop ? { top: `${STACK_TOP}px` } : undefined;
+
+  // The text column's mobile exit motion is driven directly by the
+  // LAST card's own layerProgress (0 while it's off-screen/dwelling,
+  // rising to 1 as it slides up and locks). This guarantees the text
+  // moves in exact lockstep with the last card's slide — not before,
+  // not after — regardless of any native sticky-release timing.
+  const lastStepIndex = PROCESS_STEPS.length - 1;
+  const lastCardProgress = layerProgress[lastStepIndex] ?? (lastStepIndex === 0 ? 1 : 0);
+  const mobileTextExitStyle = !isDesktop
+    ? { transform: `translateY(-${Math.round(lastCardProgress * MOBILE_TEXT_EXIT_DISTANCE)}px)` }
+    : undefined;
 
   useEffect(() => {
     const video = researchVideoRef.current;
@@ -601,7 +608,7 @@ export default function Landing() {
       </section>
 
       <section className="process-section" id="process">
-        <div className="process-sticky-col">
+        <div className="process-sticky-col" style={mobileTextExitStyle}>
           <div className="landing-hero-eyebrow process-eyebrow">
             Our process <span className="process-step-count">{activeStep + 1} / {PROCESS_STEPS.length}</span>
           </div>

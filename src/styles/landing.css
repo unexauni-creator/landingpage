@@ -557,18 +557,19 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ══════════════════════════════════════════════════════════════════
    Process section
 
-   Both .process-sticky-col (text) and .process-video-pin (video) are
-   sticky elements living inside the SAME containing block —
-   .process-section, which is exactly as tall as the entire video
-   stack's scroll duration (including the TAIL_VH dwell after the
-   last card locks). This is the key: a position:sticky element
-   automatically "releases" and resumes normal scrolling the moment
-   its containing block runs out of room. Because both elements share
-   that same container, they naturally stay pinned for the ENTIRE
-   time the cards are stacking/animating, and release together at the
-   same scroll position — right as the section ends and the Team
-   section begins. No JS measurement or manual sync is needed for
-   this to work; it's native sticky behavior.
+   Desktop (>900px): text column is sticky, pinned alongside the
+   sticky video stack, unchanged from before.
+
+   Mobile/tablet (<=900px): text column is sticky as before (so it
+   remains visible while the first two cards dwell/scroll into
+   place), but its exit is now driven directly in JS by the LAST
+   card's own scroll progress (layerProgress at index count-1, see
+   Landing.jsx) via an inline transform: translateY — NOT by relying
+   on when the underlying sticky container happens to release. This
+   guarantees the text is provably stationary while the last card is
+   still off-screen/dwelling, then moves upward in exact lockstep as
+   the last card slides into place, finishing its exit at the same
+   moment the card finishes locking.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -956,15 +957,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   Text column IS sticky here, pinned just below the nav, with a
-   fixed, deterministic height (line-clamped description) so it never
-   grows into the video below it. The video pin sits directly beneath
-   it with its own hard-coded `top`. Both are sticky within the SAME
-   tall .process-section container, so they release together
-   naturally at the same scroll position once you've scrolled through
-   all three cards — giving exactly the "text stays while I watch the
-   cards, then scrolls away once they're done" behavior. No JS
-   involved in mobile positioning at all. */
+   .process-sticky-col stays sticky here (this keeps text visible
+   while cards 1 & 2 dwell/scroll). Its EXIT motion is no longer a CSS
+   concern at all — it's driven entirely by the inline transform set
+   in Landing.jsx from the last card's own layerProgress. So the base
+   `transform: none` here is simply the resting state before that
+   JS-driven exit kicks in. */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
@@ -1000,6 +998,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     gap: 8px;
     height: 210px;
     overflow: hidden;
+    transition: transform 0.12s linear;
+    will-change: transform;
   }
   .process-title { font-size: 21px; line-height: 1.22; }
   .process-desc {
