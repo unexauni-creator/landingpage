@@ -562,14 +562,18 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
    Mobile/tablet (<=900px): text column is sticky as before (so it
    remains visible while the first two cards dwell/scroll into
-   place), but its exit is now driven directly in JS by the LAST
-   card's own scroll progress (layerProgress at index count-1, see
-   Landing.jsx) via an inline transform: translateY — NOT by relying
+   place), but its exit is driven directly in JS by the LAST card's
+   own scroll progress (layerProgress at index count-1, see
+   Landing.jsx) via an inline transform: translateY — not by relying
    on when the underlying sticky container happens to release. This
    guarantees the text is provably stationary while the last card is
    still off-screen/dwelling, then moves upward in exact lockstep as
    the last card slides into place, finishing its exit at the same
    moment the card finishes locking.
+
+   Video cards carry no caption/label overlay — plain video frames
+   only. The "Our process" heading, title, and description live
+   entirely in .process-sticky-col.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -685,10 +689,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.process-video-caption {
-  display: none;
 }
 
 /* ── Team ("Hey!") section ── */
@@ -957,12 +957,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════ Mobile / Tablet ══════════════
-   .process-sticky-col stays sticky here (this keeps text visible
-   while cards 1 & 2 dwell/scroll). Its EXIT motion is no longer a CSS
-   concern at all — it's driven entirely by the inline transform set
-   in Landing.jsx from the last card's own layerProgress. So the base
-   `transform: none` here is simply the resting state before that
-   JS-driven exit kicks in. */
+   .process-sticky-col stays sticky here (keeps text visible while
+   cards 1 & 2 dwell/scroll). Its EXIT motion is driven entirely by
+   the inline transform set in Landing.jsx from the last card's own
+   layerProgress. The base `transform: none` here is just the resting
+   state before that JS-driven exit kicks in. */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
@@ -1013,34 +1012,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-video-stack { margin-top: 0; }
   .process-video-pin { top: 294px; height: 46vh; }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
-
-  .process-video-caption {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 16px 18px 18px;
-    background: linear-gradient(to top, rgba(20,14,10,0.78) 0%, rgba(20,14,10,0.35) 55%, rgba(20,14,10,0) 100%);
-    color: #fff8f2;
-  }
-  .process-video-caption-count {
-    font-family: 'Nunito', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.8;
-  }
-  .process-video-caption-title {
-    font-family: 'Nunito', sans-serif;
-    font-weight: 800;
-    font-size: 16px;
-    line-height: 1.25;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.35);
-  }
 }
 
 /* ══════════════ Mobile ══════════════ */

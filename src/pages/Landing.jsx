@@ -41,12 +41,11 @@ const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards st
 
 // Mobile-only: how far (px) the text column travels upward, driven
 // DIRECTLY by the last card's own scroll progress (layerProgress at
-// index count-1) — not by native sticky-release timing, which proved
-// unreliable to synchronize exactly with the video's motion across
-// many attempts. This guarantees text is provably stationary while
-// the last card is off-screen or dwelling, then moves in perfect
-// lockstep with it as it slides up and locks, and finishes moving
-// off-screen at the exact moment the card finishes locking.
+// index count-1) — not by native sticky-release timing. This
+// guarantees text is provably stationary while the last card is
+// off-screen or dwelling, then moves in perfect lockstep with it as
+// it slides up and locks, finishing its exit at the exact moment the
+// card finishes locking.
 const MOBILE_TEXT_EXIT_DISTANCE = 340;
 
 function useIsDesktop(breakpoint = 900) {
@@ -651,16 +650,6 @@ export default function Landing() {
                   ) : (
                     <img className="process-video-el" src={step.src} alt={step.title} />
                   )}
-
-                  {/* Mobile-only caption baked into the card itself, as
-                      an extra label on the video. Hidden on desktop,
-                      where the side text column already covers this. */}
-                  <div className="process-video-caption">
-                    <span className="process-video-caption-count">
-                      {i + 1} / {PROCESS_STEPS.length}
-                    </span>
-                    <h3 className="process-video-caption-title">{step.title}</h3>
-                  </div>
                 </div>
               );
             })}
