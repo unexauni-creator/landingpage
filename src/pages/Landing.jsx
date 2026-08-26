@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 const CARDS = [
   { img: "https://madeinmarseille.net/actualites-marseille/2019/04/Cube-campus-aix.jpeg", rotate: -10 },
@@ -67,30 +68,53 @@ const NAV_ITEMS = [
   { id: "team", label: "Team" },
 ];
 
-function useInViewFade() {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+// Framer Motion variants — replace the old CSS opacity/transform +
+// transition rules for the sections we migrated. "hidden" is the
+// starting state, "visible" is what whileInView animates to.
+const heySectionVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+const heyInnerVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 },
+  },
+};
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
+const footerVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+const footerCtaVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 },
+  },
+};
 
-  return [ref, visible];
-}
+const footerBottomRowVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.25 },
+  },
+};
 
 function useSmoothScrollProgress() {
   const sectionRef = useRef(null);
@@ -304,8 +328,6 @@ function NavLink({ item, isActive, onClick }) {
 export default function Landing() {
   const [zoomRef, progress] = useSmoothScrollProgress();
   const [processCardsRef, activeStep] = useActiveIndex(PROCESS_STEPS.length);
-  const [heyRef, heyVisible] = useInViewFade();
-  const [footerRef, footerVisible] = useInViewFade();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
@@ -514,8 +536,21 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className={`hey-section${heyVisible ? " is-visible" : ""}`} ref={heyRef} id="team">
-        <div className="hey-inner">
+      {/* ── Team ("Hey!") section — now animated with Framer Motion.
+          whileInView triggers "visible" once the section scrolls into
+          view (matching the old threshold: 0.15 / "once" behavior via
+          viewport={{ once: true, amount: 0.15 }}), and the inner block
+          fades in slightly after with its own delay — same staggered
+          feel as before, just declared as variants instead of CSS. ── */}
+      <motion.section
+        className="hey-section"
+        id="team"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={heySectionVariants}
+      >
+        <motion.div className="hey-inner" variants={heyInnerVariants}>
           <div className="hey-left">
             <h2 className="hey-title">Hey!</h2>
             <p className="hey-lead">
@@ -546,10 +581,20 @@ export default function Landing() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
-      <footer className={`landing-footer${footerVisible ? " is-visible" : ""}`} ref={footerRef} id="launch">
+      {/* ── Footer — also migrated to Framer Motion. Same idea: the
+          whole footer fades/rises in, then the CTA block and bottom
+          row each fade in with a slight extra delay after that. ── */}
+      <motion.footer
+        className="landing-footer"
+        id="launch"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={footerVariants}
+      >
         <div className="footer-top-row">
           <div className="footer-copyright">
             <span aria-hidden="true">©</span> 2026
@@ -559,23 +604,23 @@ export default function Landing() {
           </button>
         </div>
 
-        <div className="footer-cta">
+        <motion.div className="footer-cta" variants={footerCtaVariants}>
           <div className="footer-cta-eyebrow">Coming soon</div>
           <h2 className="footer-cta-title">Don't miss our launch</h2>
           <p className="footer-cta-desc">
             We're still building — follow along on LinkedIn to see progress and be the first to know when Unexa goes live.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="footer-bottom-row">
+        <motion.div className="footer-bottom-row" variants={footerBottomRowVariants}>
           <div className="footer-pills">
             <a className="footer-pill" href={LINKEDIN_COMPANY_URL} target="_blank" rel="noopener noreferrer">Unexa</a>
             <a className="footer-pill" href={TEAM[0].linkedin} target="_blank" rel="noopener noreferrer">Kateryna</a>
             <a className="footer-pill" href={TEAM[1].linkedin} target="_blank" rel="noopener noreferrer">Anastasiia</a>
           </div>
-          <div className="footer-credit">Website designed andbuilt by Kateryna Dmytrenko </div>
-        </div>
-      </footer>
+          <div className="footer-credit">Built by Kateryna & Anastasiia</div>
+        </motion.div>
+      </motion.footer>
     </div>
   );
 }
