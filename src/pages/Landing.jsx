@@ -573,7 +573,7 @@ export default function Landing() {
             <a className="footer-pill" href={TEAM[0].linkedin} target="_blank" rel="noopener noreferrer">Kateryna</a>
             <a className="footer-pill" href={TEAM[1].linkedin} target="_blank" rel="noopener noreferrer">Anastasiia</a>
           </div>
-          <div className="footer-credit">Built by Kateryna & Anastasiia</div>
+          <div className="footer-credit">Website designed andbuilt by Kateryna Dmytrenko </div>
         </div>
       </footer>
     </div>
