@@ -421,15 +421,23 @@ export default function Landing() {
   // thing controlling .process-video-pin's position there.
   const videoPinStyle = isDesktop ? { top: `${STACK_TOP}px` } : undefined;
 
-  // The text column's mobile exit motion is driven directly by the
-  // LAST card's own layerProgress (0 while it's off-screen/dwelling,
-  // rising to 1 as it slides up and locks). This guarantees the text
-  // moves in exact lockstep with the last card's slide — not before,
-  // not after — regardless of any native sticky-release timing.
+   // The text column's mobile exit motion is driven directly by the
+  // LAST card's own layerProgress, but the exit only STARTS once that
+  // card is almost fully locked (past TEXT_EXIT_START_THRESHOLD).
+  // This keeps text completely stationary while card 3 visibly slides
+  // in and settles — matching "text stays while I'm watching the
+  // card arrive" — and only moves it away in the final sliver of
+  // scroll once the card has essentially finished locking, right
+  // before the section releases into the Team section.
   const lastStepIndex = PROCESS_STEPS.length - 1;
   const lastCardProgress = layerProgress[lastStepIndex] ?? (lastStepIndex === 0 ? 1 : 0);
+  const TEXT_EXIT_START_THRESHOLD = 0.9;
+  const exitT = Math.max(
+    0,
+    (lastCardProgress - TEXT_EXIT_START_THRESHOLD) / (1 - TEXT_EXIT_START_THRESHOLD)
+  );
   const mobileTextExitStyle = !isDesktop
-    ? { transform: `translateY(-${Math.round(lastCardProgress * MOBILE_TEXT_EXIT_DISTANCE)}px)` }
+    ? { transform: `translateY(-${Math.round(exitT * MOBILE_TEXT_EXIT_DISTANCE)}px)` }
     : undefined;
 
   useEffect(() => {
