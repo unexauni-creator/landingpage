@@ -82,27 +82,30 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   THE FIX: .landing-nav gets `transform: translateZ(0)` and
-   `isolation: isolate`. This is the standard, documented fix for a
-   real WebKit/Safari bug where position:sticky elements sometimes
-   fail to respect z-index against position:fixed, backdrop-filter'd
-   siblings (like .scroll-blur-stack / .landing-nav-overlay), even
-   when the sticky element's z-index is explicitly higher. Forcing
-   the sticky nav onto its own GPU compositing layer makes the
-   browser resolve stacking correctly and reliably, instead of the
-   ambiguous/buggy fallback behavior that was hiding the nav pill and
-   its links behind the blur/overlay when the mobile menu opened.
+   THE ACTUAL FIX: .landing-nav is now position: fixed instead of
+   position: sticky. A fixed element is ALWAYS pinned to the viewport
+   regardless of scroll depth or which section/ancestor you're inside
+   — there is no scroll-container/stacking-context ambiguity left for
+   any browser to get wrong, which is what was causing the nav to
+   vanish when opened deep in the page (e.g. at the footer). Since
+   fixed elements are removed from normal flow, .landing-nav-spacer
+   below reserves the equivalent space so the hero section doesn't
+   jump up underneath it.
    ══════════════════════════════════════════════════════════════════ */
 .landing-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   z-index: 150;
   display: flex;
   justify-content: center;
   padding: 20px 24px 0;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  isolation: isolate;
+}
+
+.landing-nav-spacer {
+  height: 84px;
 }
 
 .landing-nav-pill {
@@ -1043,6 +1046,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     background-attachment: scroll;
   }
 
+  .landing-nav-spacer {
+    height: 76px;
+  }
+
   .scroll-blur-stack {
     height: 180px;
   }
@@ -1108,7 +1115,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     display: flex;
     flex-direction: column;
     position: sticky;
-    top: 84px;
+    top: 76px;
     z-index: 20;
     gap: 16px;
   }
@@ -1138,6 +1145,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 /* ══════════════ Mobile ══════════════ */
 @media (max-width: 768px) {
+  .landing-nav-spacer {
+    height: 70px;
+  }
+
   .landing-hero { padding: 16px 20px 32px; }
   .landing-hero-title { font-size: 30px; margin-bottom: 18px; }
   .landing-hero-desc { font-size: 15px; }
@@ -1192,7 +1203,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-cta { font-size: 11.5px; padding: 7px 12px; }
 
   .process-section { padding-top: 110px; }
-  .process-pin-mobile-group { top: 76px; }
+  .process-pin-mobile-group { top: 70px; }
   .process-mobile-text { padding-top: 16px; }
   .process-mobile-text .process-title { font-size: 19px; }
   .process-mobile-text .process-desc { font-size: 12.5px; }
@@ -1233,6 +1244,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 @media (max-width: 480px) {
+  .landing-nav-spacer {
+    height: 66px;
+  }
+
   .research-zoom-stat-bar {
     height: 94px !important;
     padding: 12px 5px;
@@ -1240,7 +1255,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-stat-value { font-size: 17px; }
 
   .process-section { padding-top: 100px; }
-  .process-pin-mobile-group { top: 70px; }
+  .process-pin-mobile-group { top: 66px; }
   .process-mobile-text .process-title { font-size: 18px; }
   .process-mobile-text .process-desc { font-size: 12px; }
   .process-video-pin { height: 40vh; }

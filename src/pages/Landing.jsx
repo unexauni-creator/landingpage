@@ -524,14 +524,6 @@ export default function Landing() {
     <div className="landing-page">
       <div className="scroll-progress-bar" style={{ transform: `scaleX(${docProgress})` }} />
 
-      {/* ── Progressive scroll blur ──
-          Hidden entirely while the mobile nav is open (mobileNavOpen)
-          — it isn't needed then (the full-page overlay handles
-          dimming), and removing it eliminates ANY chance of the
-          known WebKit/Safari bug where fixed, backdrop-filter'd
-          layers incorrectly paint over sticky elements even at a
-          lower z-index. See .landing-nav in landing.css for the
-          matching fix (forced compositing layer). */}
       {!mobileNavOpen && (
         <div className="scroll-blur-stack" aria-hidden="true">
           <div className="scroll-blur-layer scroll-blur-layer-1" />
@@ -589,6 +581,11 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* Fixed nav is removed from document flow, so this spacer
+          reserves the exact space it would otherwise occupy — keeps
+          the hero section from jumping up underneath it. */}
+      <div className="landing-nav-spacer" aria-hidden="true" />
 
       <div
         className={`landing-nav-overlay${mobileNavOpen ? " is-open" : ""}`}
