@@ -1027,8 +1027,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-video-stack { margin-top: 0; }
 
-  .process-video-pin {
-    position: static;
+   .process-video-pin {
+    position: relative;
     height: 46vh;
     display: block;
   }
