@@ -44,6 +44,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 .landing-nav-pill {
+  position: relative;
   width: 100%;
   max-width: 760px;
   background: #F7F1EA;
@@ -51,7 +52,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   border-radius: 999px;
   box-shadow: 0 10px 26px rgba(43,31,24,0.1);
   transition: box-shadow 0.45s var(--ease-premium), border-radius 0.3s var(--ease-premium);
-  overflow: hidden;
 }
 
 .landing-nav-pill.is-scrolled {
@@ -178,14 +178,24 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .landing-nav-mobile-panel {
   display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: #F7F1EA;
+  border-radius: 28px;
+  box-shadow: 0 14px 34px rgba(43,31,24,0.18);
   overflow: hidden;
   max-height: 0;
   opacity: 0;
+  pointer-events: none;
   transition: max-height 0.35s var(--ease-premium), opacity 0.3s var(--ease-premium);
 }
 .landing-nav-mobile-panel.is-open {
   max-height: 320px;
   opacity: 1;
+  pointer-events: auto;
 }
 
 .landing-nav-mobile-links {
@@ -681,7 +691,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   max-height: 70vh;
   border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 -6px 0 rgba(255,255,255,0.55), 0 24px 52px rgba(43,31,24,0.32);
+  box-shadow: 0 24px 52px rgba(43,31,24,0.32);
   background: #1c140f;
   transition: transform 0.12s linear;
   will-change: transform;
