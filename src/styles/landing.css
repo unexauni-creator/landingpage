@@ -42,43 +42,48 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   height: 280px;
   z-index: 100;
   pointer-events: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 .scroll-blur-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .scroll-blur-layer-1 {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  mask-image: linear-gradient(to bottom, black 0%, black 15%, transparent 30%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 15%, transparent 30%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 38%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 38%);
 }
 .scroll-blur-layer-2 {
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 50%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 30%, transparent 50%);
-}
-.scroll-blur-layer-3 {
   backdrop-filter: blur(9px);
   -webkit-backdrop-filter: blur(9px);
-  mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 65%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 42%, transparent 65%);
+  mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 55%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 55%);
 }
-.scroll-blur-layer-4 {
+.scroll-blur-layer-3 {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  mask-image: linear-gradient(to bottom, black 0%, black 52%, transparent 80%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 52%, transparent 80%);
+  mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 70%);
+}
+.scroll-blur-layer-4 {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 85%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 85%);
 }
 .scroll-blur-layer-5 {
-  backdrop-filter: blur(26px);
-  -webkit-backdrop-filter: blur(26px);
-  mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
+  backdrop-filter: blur(34px);
+  -webkit-backdrop-filter: blur(34px);
+  mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -102,6 +107,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: flex;
   justify-content: center;
   padding: 20px 24px 0;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
 }
 
 .landing-nav-spacer {
