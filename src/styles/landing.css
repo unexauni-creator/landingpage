@@ -333,15 +333,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 /* ══════════════════════════════════════════════════════════════════
    Folder zoom-reveal section
 
-   .research-zoom-sticky now uses justify-content: center (was
-   flex-start). This is what fixes "the video grows from the bottom":
-   a CSS scale() transform always expands symmetrically around the
-   element's own center — but when that element sits pinned near the
-   very top of the viewport (flex-start), the upward half of its
-   growth gets clipped by the section's edge, so only the downward
-   half stays visible, reading as "growing from the bottom." Centering
-   the block gives it equal room above and below to grow into, so the
-   zoom now visibly expands from its true center in both directions.
+   DESKTOP: unchanged — pinned, scroll-driven zoom + crossfade.
+   MOBILE (<=900px, see media query below): the whole scroll-pinning
+   mechanic is disabled. .research-zoom-section becomes a normal,
+   non-pinned block (height:auto) and .research-zoom-sticky becomes a
+   plain static column — heading, then video (at its natural, larger
+   CSS size, no scale animation), then the reveal text/stats/card, all
+   stacked in normal flow. This removes both the growing-video
+   behavior and the huge blank scroll gap that came from the 220vh
+   pinned section height, and keeps text permanently visible since JS
+   now hard-codes textOpacity to 1 on mobile.
    ══════════════════════════════════════════════════════════════════ */
 .research-zoom-section {
   position: relative;
@@ -433,12 +434,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   background: #2b1f18;
 }
 
-/* .research-zoom-text: top padding raised from 0 to 110px (desktop),
-   so this block — the "82% want clearer info..." headline, stat
-   cards, and LinkedIn card — always renders BELOW the sticky nav,
-   never underneath it. Previously with align-items:center and no top
-   clearance, tall content could render with its top edge hidden
-   behind the nav pill (the "THE BIGGES[T GAP]" clipping bug). */
 .research-zoom-text {
   position: absolute;
   inset: 0;
@@ -990,7 +985,37 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     background-attachment: scroll;
   }
 
-  .research-zoom-sticky { padding-top: 88px; }
+  /* THE FIX: entire scroll-pinned zoom mechanic is disabled here.
+     The section becomes a normal-height block, the sticky wrapper
+     becomes a plain static column, and .research-zoom-text becomes a
+     normal-flow child stacked after the heading+video instead of
+     absolutely overlaying it — everything renders once, in order,
+     no scroll math, no gap, no overlap. */
+  .research-zoom-section {
+    height: auto;
+  }
+  .research-zoom-sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding: 56px 0 40px;
+    gap: 40px;
+  }
+  .research-zoom-fade {
+    gap: 24px;
+  }
+  .research-zoom-heading {
+    padding: 0 24px;
+  }
+  .research-zoom-text {
+    position: static;
+    inset: auto;
+    padding: 0 18px;
+    pointer-events: auto;
+  }
+  .folder-visual {
+    width: 90vw;
+  }
 
   .landing-nav-links,
   .landing-nav-cta {
@@ -1067,15 +1092,15 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     box-shadow: none;
   }
 
-  .research-zoom-sticky { padding-top: 88px; }
+  .research-zoom-sticky { padding: 40px 0 32px; gap: 32px; }
   .research-zoom-heading { padding: 0 24px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
-  .folder-visual { width: 74vw; }
+  .folder-visual { width: 92vw; }
   .folder-back { inset: -10px; }
   .research-zoom-fade { gap: 16px; }
 
-  .research-zoom-text { padding: 104px 18px 20px; gap: 14px; align-items: center; }
+  .research-zoom-text { padding: 0 18px; gap: 14px; align-items: center; }
   .research-zoom-main { align-items: center; gap: 18px; }
   .research-zoom-copy { text-align: center; }
   .research-zoom-desc { text-align: center; font-size: 14px; }

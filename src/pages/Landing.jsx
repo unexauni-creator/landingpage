@@ -138,12 +138,9 @@ const footerBottomRowVariants = {
 };
 
 // Live, fully bidirectional scroll progress through the pinned
-// research-zoom section (0 at the top of the pin, 1 at the bottom).
-// Both the video zoom AND the text/stat/LinkedIn-card crossfade are
-// driven from this SAME live value, so scrolling down fades video out
-// / text in, and scrolling back up fades text out / video back in —
-// a true, symmetric crossfade with no permanent "stuck" state in
-// either direction.
+// research-zoom section. Only used on DESKTOP now — on mobile, the
+// zoom/reveal scroll animation is fully bypassed (see isDesktop
+// checks below), so this hook's output is simply ignored there.
 function useSmoothScrollProgress() {
   const sectionRef = useRef(null);
   const [smoothProgress, setSmoothProgress] = useState(0);
@@ -368,13 +365,13 @@ function NavLink({ item, isActive, onClick }) {
 }
 
 export default function Landing() {
+  const isDesktop = useIsDesktop(900);
   const [zoomRef, progress] = useSmoothScrollProgress();
   const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
   const processVideoRefs = useRef([]);
-  const isDesktop = useIsDesktop(900);
 
   const navIds = NAV_ITEMS.map(function (n) {
     return n.id;
@@ -383,22 +380,29 @@ export default function Landing() {
   const navScrolled = useScrolled();
   const navPillClass = `landing-nav-pill${navScrolled ? " is-scrolled" : ""}${mobileNavOpen ? " is-open" : ""}`;
 
-  // Video zoom scale/radius: driven by live `progress` — reverses as
-  // you scroll up, which is the correct, intended zoom mechanic.
-  const eased = progress * progress * (3 - 2 * progress);
-  const scale = 0.55 + eased * 0.7;
-  const radius = 30 - eased * 10;
+  // ── Desktop: full scroll-driven zoom/crossfade, as before. ──
+  // ── Mobile: none of this scroll math applies. The video renders at
+  //    its natural (larger, CSS-controlled) size immediately, and the
+  //    heading + reveal text are simply always fully visible — no
+  //    fade tied to scroll position at all. This removes the "video
+  //    grows as I scroll" behavior and the "text disappears" behavior
+  //    on mobile entirely, as requested.
+  const rawEased = progress * progress * (3 - 2 * progress);
+  const scale = isDesktop ? 0.55 + rawEased * 0.7 : 1;
+  const radius = isDesktop ? 30 - rawEased * 10 : 24;
+  const headingOpacity = isDesktop ? Math.max(0, 1 - progress / 0.5) : 1;
+  const folderOpacity = isDesktop ? 1 - Math.max(0, (progress - 0.85) / 0.1) : 1;
+  const textOpacity = isDesktop ? Math.min(1, Math.max(0, (progress - 0.82) / 0.18)) : 1;
+  const wordRevealFraction = isDesktop
+    ? Math.max(0, Math.min(1, (progress - 0.85) / 0.15))
+    : 1;
+  const revealedWordCount = isDesktop
+    ? Math.round(wordRevealFraction * HEADLINE_WORDS.length)
+    : HEADLINE_WORDS.length;
 
-  // Heading + video fade, and the text/stat/LinkedIn-card reveal, are
-  // now BOTH driven by the same live `progress` value — a genuine
-  // crossfade that runs both ways. Scrolling down: video fades out as
-  // text fades in. Scrolling back up: text fades out as video fades
-  // back in. Neither side gets permanently "stuck" in one state.
-  const headingOpacity = Math.max(0, 1 - progress / 0.5);
-  const folderOpacity = 1 - Math.max(0, (progress - 0.85) / 0.1);
-  const textOpacity = Math.min(1, Math.max(0, (progress - 0.82) / 0.18));
-  const wordRevealFraction = Math.max(0, Math.min(1, (progress - 0.85) / 0.15));
-  const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
+  const folderVisualStyle = isDesktop
+    ? { transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }
+    : { opacity: 1 };
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
   const videoStackHeight =
@@ -410,6 +414,14 @@ export default function Landing() {
     const video = researchVideoRef.current;
     if (!video) return;
 
+    // On mobile the video is always visible, so just keep it playing.
+    if (!isDesktop) {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+      return;
+    }
+
     if (progress > 0.02) {
       if (video.paused) {
         video.play().catch(() => {});
@@ -418,7 +430,7 @@ export default function Landing() {
       video.pause();
       video.currentTime = 0;
     }
-  }, [progress]);
+  }, [progress, isDesktop]);
 
   useEffect(() => {
     PROCESS_STEPS.forEach((step, i) => {
@@ -544,7 +556,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="folder-visual" style={{ transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }}>
+            <div className="folder-visual" style={folderVisualStyle}>
               <div className="folder-back" />
               <div className="folder-video-slot">
                 <video
