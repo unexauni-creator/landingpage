@@ -524,26 +524,23 @@ export default function Landing() {
     <div className="landing-page">
       <div className="scroll-progress-bar" style={{ transform: `scaleX(${docProgress})` }} />
 
-      {/* ── Progressive scroll blur, iOS-navbar style ──
-          Five stacked, full-width layers pinned to the top of the
-          viewport, sitting BELOW the nav pill (lower z-index) but
-          ABOVE the scrolling page content. Each layer applies
-          backdrop-filter: blur() at an increasing strength and is
-          masked (mask-image gradient) to fade in over a slightly
-          different vertical range. Layered together, the cumulative
-          effect is a smooth, continuous blur that is strongest right
-          at the very top of the viewport and progressively softens to
-          fully sharp by ~170px down — exactly the "content approaching
-          the navbar gets progressively blurred" effect, without
-          blurring the whole page or the nav pill itself.
-          pointer-events: none so it never blocks clicks/scroll. */}
-      <div className="scroll-blur-stack" aria-hidden="true">
-        <div className="scroll-blur-layer scroll-blur-layer-1" />
-        <div className="scroll-blur-layer scroll-blur-layer-2" />
-        <div className="scroll-blur-layer scroll-blur-layer-3" />
-        <div className="scroll-blur-layer scroll-blur-layer-4" />
-        <div className="scroll-blur-layer scroll-blur-layer-5" />
-      </div>
+      {/* ── Progressive scroll blur ──
+          Hidden entirely while the mobile nav is open (mobileNavOpen)
+          — it isn't needed then (the full-page overlay handles
+          dimming), and removing it eliminates ANY chance of the
+          known WebKit/Safari bug where fixed, backdrop-filter'd
+          layers incorrectly paint over sticky elements even at a
+          lower z-index. See .landing-nav in landing.css for the
+          matching fix (forced compositing layer). */}
+      {!mobileNavOpen && (
+        <div className="scroll-blur-stack" aria-hidden="true">
+          <div className="scroll-blur-layer scroll-blur-layer-1" />
+          <div className="scroll-blur-layer scroll-blur-layer-2" />
+          <div className="scroll-blur-layer scroll-blur-layer-3" />
+          <div className="scroll-blur-layer scroll-blur-layer-4" />
+          <div className="scroll-blur-layer scroll-blur-layer-5" />
+        </div>
+      )}
 
       <header className="landing-nav">
         <div className={navPillClass}>

@@ -34,30 +34,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   pointer-events: none;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   Progressive scroll blur ("iOS navbar" effect)
-
-   .scroll-blur-stack is fixed to the top of the viewport, full width,
-   z-index BELOW the nav (100) but ABOVE the page content — so it sits
-   in the gap between them. It contains 5 stacked layers, each:
-     - the exact same fixed position/size (top: 0, full width)
-     - an increasing backdrop-filter blur radius (layer 1 = lightest,
-       layer 5 = strongest)
-     - a mask-image linear-gradient that fades that layer's blur in
-       over a slightly different vertical range
-
-   Because backdrop-filter blurs whatever is BEHIND an element using
-   only that element's own alpha/mask, stacking 5 of these with
-   overlapping-but-offset gradient masks produces a single combined
-   result that reads as one smooth, continuous blur — strongest right
-   at the top edge of the viewport, and fading out to fully sharp by
-   ~170px down. Content scrolling up from below passes through this
-   zone and visibly softens the closer it gets to the very top, before
-   disappearing behind the nav pill.
-
-   pointer-events: none throughout so nothing here can ever intercept
-   clicks, taps, or scroll gestures.
-   ══════════════════════════════════════════════════════════════════ */
 .scroll-blur-stack {
   position: fixed;
   top: 0;
@@ -105,6 +81,18 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   -webkit-mask-image: linear-gradient(to bottom, black 0%, black 58%, transparent 100%);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   THE FIX: .landing-nav gets `transform: translateZ(0)` and
+   `isolation: isolate`. This is the standard, documented fix for a
+   real WebKit/Safari bug where position:sticky elements sometimes
+   fail to respect z-index against position:fixed, backdrop-filter'd
+   siblings (like .scroll-blur-stack / .landing-nav-overlay), even
+   when the sticky element's z-index is explicitly higher. Forcing
+   the sticky nav onto its own GPU compositing layer makes the
+   browser resolve stacking correctly and reliably, instead of the
+   ambiguous/buggy fallback behavior that was hiding the nav pill and
+   its links behind the blur/overlay when the mobile menu opened.
+   ══════════════════════════════════════════════════════════════════ */
 .landing-nav {
   position: sticky;
   top: 0;
@@ -112,12 +100,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: flex;
   justify-content: center;
   padding: 20px 24px 0;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
 }
 
-/* Nav pill is back to a solid, fully opaque background — it stays
-   completely sharp and readable at all times. All of the "content
-   blurs as it scrolls past" effect now lives entirely in
-   .scroll-blur-stack, positioned behind this pill. */
 .landing-nav-pill {
   position: relative;
   width: 100%;
@@ -1056,7 +1043,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     background-attachment: scroll;
   }
 
-   .scroll-blur-stack {
+  .scroll-blur-stack {
     height: 180px;
   }
 
