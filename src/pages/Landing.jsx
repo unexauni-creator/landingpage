@@ -26,7 +26,7 @@ const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsM
 const STACK_TOP = 110;
 const SEGMENT_VH = 180;
 const DWELL_FRACTION = 0.5;
-const TAIL_VH = 130;
+const TAIL_VH = 40;
 const STACK_GAP = 22;
 
 function useIsDesktop(breakpoint = 900) {
@@ -524,8 +524,16 @@ export default function Landing() {
     <div className="landing-page">
       <div className="scroll-progress-bar" style={{ transform: `scaleX(${docProgress})` }} />
 
+           {/* Scrim only shows once the user has actually scrolled
+          (reusing navScrolled, same threshold as the nav pill's own
+          "scrolled" state) — otherwise it was rendering at full
+          strength from the very first pixel of the page, covering
+          the hero text before any scrolling happened at all. */}
       {!mobileNavOpen && (
-        <div className="scroll-blur-stack" aria-hidden="true">
+        <div
+          className={`scroll-blur-stack${navScrolled ? " is-visible" : ""}`}
+          aria-hidden="true"
+        >
           <div className="scroll-blur-layer scroll-blur-layer-1" />
           <div className="scroll-blur-layer scroll-blur-layer-2" />
           <div className="scroll-blur-layer scroll-blur-layer-3" />
