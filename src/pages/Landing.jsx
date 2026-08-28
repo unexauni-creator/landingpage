@@ -402,8 +402,8 @@ export default function Landing() {
   const scale = 0.55 + eased * 0.7;
   const radius = 30 - eased * 10;
 
-  const headingOpacity = Math.max(0, 1 - progress / 0.5);
-  const folderOpacity = 1 - Math.max(0, (progress - 0.85) / 0.1);
+ const headingOpacity = Math.max(0, 1 - maxProgress / 0.5);
+ const folderOpacity = 1 - Math.max(0, (maxProgress - 0.85) / 0.1);
 
   // Reveal text (headline + stat cards + LinkedIn card): driven by
   // `maxProgress`, the one-way high-water mark. Once fully revealed,
