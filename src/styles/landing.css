@@ -565,10 +565,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Process section — DESKTOP (>900px): unchanged from before. Two
-   independent grid columns, each with its own sticky element (text
-   column left, video stack right). This part was never buggy, so it
-   is left byte-for-byte the same as it has always been.
+   Process section — DESKTOP (>900px)
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -657,20 +654,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   z-index: 5;
 }
 
-/* Mobile-only wrapper: display:contents makes it structurally
-   invisible on desktop (its children — .process-mobile-text and
-   .process-video-pin — act as if they were direct children of
-   .process-video-stack, so desktop's layout is completely
-   unaffected). On mobile it becomes the single sticky element — see
-   the media query below. */
 .process-pin-mobile-group {
   display: contents;
 }
 
-/* Hidden on desktop; only becomes visible inside the mobile media
-   query below. This is the mobile-only duplicate of the text block,
-   living inside the same sticky context as the video frames so they
-   can never desync. */
 .process-mobile-text {
   display: none;
 }
@@ -969,23 +956,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   Process section — MOBILE / TABLET (<=900px)
-
-   THE FIX: .process-pin-mobile-group becomes THE ONLY sticky element
-   for text+video on mobile. It contains .process-mobile-text (plain,
-   normal-flow text) followed by .process-video-pin (now position:
-   static — it is no longer sticky itself; its child video frames are
-   still absolutely positioned exactly as before, now anchored to
-   .process-video-pin's own top:0, which sits directly below the text
-   block in normal flow). Because there is exactly ONE sticky element
-   instead of two independently-timed ones, text and video are
-   physically incapable of desyncing or overlapping — they release
-   together, at the same scroll position, every time.
-
-   The desktop .process-sticky-col is hidden here (display:none) since
-   .process-mobile-text is now showing the same content in its place.
-   ══════════════════════════════════════════════════════════════════ */
+/* ══════════════ Mobile / Tablet ══════════════ */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
@@ -1012,7 +983,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     padding-top: 130px;
   }
 
-  /* Hide the desktop text column entirely on mobile. */
   .process-sticky-col {
     display: none;
   }
@@ -1047,6 +1017,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     max-height: none;
     aspect-ratio: auto;
   }
+}
 
 /* ══════════════ Mobile ══════════════ */
 @media (max-width: 768px) {
@@ -1106,7 +1077,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-mobile-text .process-title { font-size: 19px; }
   .process-mobile-text .process-desc { font-size: 12.5px; }
   .process-video-pin { height: 42vh; }
-  .process-video-frame { max-height: 42vh; }
+  .process-video-frame { height: 42vh; max-height: none; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
   .hey-title { font-size: 40px; }
