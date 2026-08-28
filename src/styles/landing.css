@@ -1037,13 +1037,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .process-video-stack { margin-top: 0; }
 
-   .process-video-pin {
+  .process-video-pin {
     position: relative;
     height: 46vh;
     display: block;
   }
-  .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
-}
+  .process-video-frame {
+    height: 46vh;
+    max-height: none;
+    aspect-ratio: auto;
+  }
 
 /* ══════════════ Mobile ══════════════ */
 @media (max-width: 768px) {
@@ -1150,7 +1153,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .process-mobile-text .process-title { font-size: 18px; }
   .process-mobile-text .process-desc { font-size: 12px; }
   .process-video-pin { height: 40vh; }
-  .process-video-frame { max-height: 40vh; }
+  .process-video-frame { height: 40vh; max-height: none; }
 
   .linkedin-card {
     width: min(280px, 88vw);
