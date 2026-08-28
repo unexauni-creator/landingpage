@@ -34,56 +34,38 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   pointer-events: none;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   Nav scrim: a plain, solid gradient (NOT backdrop-filter) fixed
+   behind the nav pill. backdrop-filter was silently failing to
+   sample anything here — likely due to isolation:isolate on
+   .hey-section/.landing-footer clipping what it's allowed to read
+   from — with zero visual fallback or error, which is exactly what
+   was observed. A gradient background has no such dependency: it
+   always renders. Content scrolling underneath now visually fades
+   toward the page's own background color as it nears the nav,
+   reading as "softening out" before disappearing behind the pill —
+   same intent as the blur, guaranteed to work everywhere.
+   ══════════════════════════════════════════════════════════════════ */
 .scroll-blur-stack {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 280px;
+  height: 200px;
   z-index: 100;
   pointer-events: none;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
+  background: linear-gradient(
+    to bottom,
+    #e2e0e0 0%,
+    #e2e0e0 30%,
+    rgba(226, 224, 224, 0.85) 50%,
+    rgba(226, 224, 224, 0.45) 72%,
+    rgba(226, 224, 224, 0) 100%
+  );
 }
 
 .scroll-blur-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-.scroll-blur-layer-1 {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 38%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 20%, transparent 38%);
-}
-.scroll-blur-layer-2 {
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-  mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 55%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 34%, transparent 55%);
-}
-.scroll-blur-layer-3 {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 70%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 46%, transparent 70%);
-}
-.scroll-blur-layer-4 {
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 85%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 56%, transparent 85%);
-}
-.scroll-blur-layer-5 {
-  backdrop-filter: blur(34px);
-  -webkit-backdrop-filter: blur(34px);
-  mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
+  display: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1058,8 +1040,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     height: 76px;
   }
 
-    .scroll-blur-stack {
-    height: 220px;
+     .scroll-blur-stack {
+    height: 170px;
   }
 
   .research-zoom-section {
@@ -1158,7 +1140,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
 
   .scroll-blur-stack {
-    height: 200px;
+    height: 150px;
   }
 
   .landing-hero { padding: 16px 20px 32px; }
