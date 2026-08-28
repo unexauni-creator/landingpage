@@ -35,13 +35,76 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Nav pill: now a frosted-glass panel (semi-transparent background +
-   backdrop-filter blur) instead of a fully opaque one. This is what
-   creates the "content blurs as it scrolls underneath the nav"
-   effect — anything scrolling past behind the sticky pill is visibly
-   softened through it, like the reference. Border/shadow keep its
-   edge readable against the page.
+   Progressive scroll blur ("iOS navbar" effect)
+
+   .scroll-blur-stack is fixed to the top of the viewport, full width,
+   z-index BELOW the nav (100) but ABOVE the page content — so it sits
+   in the gap between them. It contains 5 stacked layers, each:
+     - the exact same fixed position/size (top: 0, full width)
+     - an increasing backdrop-filter blur radius (layer 1 = lightest,
+       layer 5 = strongest)
+     - a mask-image linear-gradient that fades that layer's blur in
+       over a slightly different vertical range
+
+   Because backdrop-filter blurs whatever is BEHIND an element using
+   only that element's own alpha/mask, stacking 5 of these with
+   overlapping-but-offset gradient masks produces a single combined
+   result that reads as one smooth, continuous blur — strongest right
+   at the top edge of the viewport, and fading out to fully sharp by
+   ~170px down. Content scrolling up from below passes through this
+   zone and visibly softens the closer it gets to the very top, before
+   disappearing behind the nav pill.
+
+   pointer-events: none throughout so nothing here can ever intercept
+   clicks, taps, or scroll gestures.
    ══════════════════════════════════════════════════════════════════ */
+.scroll-blur-stack {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.scroll-blur-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scroll-blur-layer-1 {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  mask-image: linear-gradient(to bottom, black 0%, black 12.5%, transparent 25%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 12.5%, transparent 25%);
+}
+.scroll-blur-layer-2 {
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  mask-image: linear-gradient(to bottom, black 0%, black 25%, transparent 45%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 25%, transparent 45%);
+}
+.scroll-blur-layer-3 {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to bottom, black 0%, black 37.5%, transparent 62.5%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 37.5%, transparent 62.5%);
+}
+.scroll-blur-layer-4 {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 80%);
+}
+.scroll-blur-layer-5 {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+}
+
 .landing-nav {
   position: sticky;
   top: 0;
@@ -51,27 +114,27 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   padding: 20px 24px 0;
 }
 
+/* Nav pill is back to a solid, fully opaque background — it stays
+   completely sharp and readable at all times. All of the "content
+   blurs as it scrolls past" effect now lives entirely in
+   .scroll-blur-stack, positioned behind this pill. */
 .landing-nav-pill {
   position: relative;
   width: 100%;
   max-width: 760px;
-  background: rgba(247, 241, 234, 0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: #F7F1EA;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 999px;
   box-shadow: none;
-  transition: box-shadow 0.45s var(--ease-premium), border-radius 0.3s var(--ease-premium), background 0.3s var(--ease-premium);
+  transition: box-shadow 0.45s var(--ease-premium), border-radius 0.3s var(--ease-premium);
 }
 
 .landing-nav-pill.is-scrolled {
-  background: rgba(247, 241, 234, 0.9);
   box-shadow: none;
 }
 
 .landing-nav-pill.is-open {
   border-radius: 28px;
-  background: rgba(247, 241, 234, 0.96);
 }
 
 .landing-nav-top-row {
@@ -188,14 +251,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   Mobile nav dropdown: margin-top increased for a real visible gap
-   below the pill; the dropdown itself is a fully opaque, independently
-   rounded panel (28px, all corners), and .landing-nav-mobile-links
-   gets extra top padding so the first ("About") item's own 12px
-   corner radius has breathing room instead of appearing to butt
-   flush against the dropdown's top edge.
-   ══════════════════════════════════════════════════════════════════ */
 .landing-nav-mobile-panel {
   display: none;
   position: absolute;
@@ -252,13 +307,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   text-decoration: none;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   Nav overlay: covers the whole page beneath the nav (lower z-index
-   than .landing-nav so the pill/dropdown always render crisply on
-   top of it) with a soft dim + blur, only visible while the mobile
-   dropdown is open. Tapping it (via onClick in Landing.jsx) closes
-   the menu, same as tapping outside any standard mobile nav overlay.
-   ══════════════════════════════════════════════════════════════════ */
 .landing-nav-overlay {
   position: fixed;
   inset: 0;
@@ -1000,20 +1048,16 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .hey-inner { grid-template-columns: 1fr; }
   .hey-lead, .hey-body p { max-width: 100%; }
-
-  .landing-cards-fan { padding: 24px 4vw 64px; }
-  .landing-fan-card {
-    width: 20vw;
-    height: 26vw;
-    margin: 0 -2.5vw;
-    border-radius: 14px;
-  }
 }
 
 /* ══════════════ Mobile / Tablet ══════════════ */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
+  }
+
+  .scroll-blur-stack {
+    height: 150px;
   }
 
   .research-zoom-section {

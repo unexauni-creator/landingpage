@@ -462,8 +462,6 @@ export default function Landing() {
     });
   }, [activeStep]);
 
-  // Lock page scroll while the mobile nav overlay is open, so the
-  // background can't be scrolled behind the blurred overlay.
   useEffect(() => {
     if (mobileNavOpen) {
       document.body.style.overflow = "hidden";
@@ -526,6 +524,27 @@ export default function Landing() {
     <div className="landing-page">
       <div className="scroll-progress-bar" style={{ transform: `scaleX(${docProgress})` }} />
 
+      {/* ── Progressive scroll blur, iOS-navbar style ──
+          Five stacked, full-width layers pinned to the top of the
+          viewport, sitting BELOW the nav pill (lower z-index) but
+          ABOVE the scrolling page content. Each layer applies
+          backdrop-filter: blur() at an increasing strength and is
+          masked (mask-image gradient) to fade in over a slightly
+          different vertical range. Layered together, the cumulative
+          effect is a smooth, continuous blur that is strongest right
+          at the very top of the viewport and progressively softens to
+          fully sharp by ~170px down — exactly the "content approaching
+          the navbar gets progressively blurred" effect, without
+          blurring the whole page or the nav pill itself.
+          pointer-events: none so it never blocks clicks/scroll. */}
+      <div className="scroll-blur-stack" aria-hidden="true">
+        <div className="scroll-blur-layer scroll-blur-layer-1" />
+        <div className="scroll-blur-layer scroll-blur-layer-2" />
+        <div className="scroll-blur-layer scroll-blur-layer-3" />
+        <div className="scroll-blur-layer scroll-blur-layer-4" />
+        <div className="scroll-blur-layer scroll-blur-layer-5" />
+      </div>
+
       <header className="landing-nav">
         <div className={navPillClass}>
           <div className="landing-nav-top-row">
@@ -574,10 +593,6 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Full-page blurred overlay shown only while the mobile nav
-          dropdown is open. Sits below the nav (z-index) so the pill
-          and dropdown stay crisp, but blurs/dims everything behind
-          them. Tapping it closes the menu. */}
       <div
         className={`landing-nav-overlay${mobileNavOpen ? " is-open" : ""}`}
         onClick={closeMobileNav}
