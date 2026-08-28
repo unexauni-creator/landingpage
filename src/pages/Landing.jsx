@@ -137,24 +137,18 @@ const footerBottomRowVariants = {
   },
 };
 
-// Tracks scroll progress through the pinned research-zoom section.
-// Returns BOTH the live, bidirectional `smoothProgress` (used to drive
-// the video zoom scale, which is meant to reverse as you scroll up —
-// that's the intended zoom mechanic) AND `maxProgress`, a one-way
-// "high-water mark" that only ever increases. Once the reveal text has
-// been fully shown (maxProgress reaches the reveal threshold), gently
-// scrolling back up within the section no longer hides it — maxProgress
-// stays at its peak, so the text stays visible. This eliminates the
-// "text disappears when I scroll up to reread it" behavior while
-// keeping the video zoom itself fully scroll-scrubbed in both
-// directions.
+// Live, fully bidirectional scroll progress through the pinned
+// research-zoom section (0 at the top of the pin, 1 at the bottom).
+// Both the video zoom AND the text/stat/LinkedIn-card crossfade are
+// driven from this SAME live value, so scrolling down fades video out
+// / text in, and scrolling back up fades text out / video back in —
+// a true, symmetric crossfade with no permanent "stuck" state in
+// either direction.
 function useSmoothScrollProgress() {
   const sectionRef = useRef(null);
   const [smoothProgress, setSmoothProgress] = useState(0);
-  const [maxProgress, setMaxProgress] = useState(0);
   const targetRef = useRef(0);
   const currentRef = useRef(0);
-  const maxRef = useRef(0);
   const rafRef = useRef(null);
 
   useEffect(() => {
@@ -178,12 +172,6 @@ function useSmoothScrollProgress() {
         currentRef.current = targetRef.current;
       }
       setSmoothProgress(currentRef.current);
-
-      if (currentRef.current > maxRef.current) {
-        maxRef.current = currentRef.current;
-        setMaxProgress(maxRef.current);
-      }
-
       rafRef.current = requestAnimationFrame(tick);
     }
 
@@ -202,7 +190,7 @@ function useSmoothScrollProgress() {
     };
   }, []);
 
-  return [sectionRef, smoothProgress, maxProgress];
+  return [sectionRef, smoothProgress];
 }
 
 function useDocScrollProgress() {
@@ -380,7 +368,7 @@ function NavLink({ item, isActive, onClick }) {
 }
 
 export default function Landing() {
-  const [zoomRef, progress, maxProgress] = useSmoothScrollProgress();
+  const [zoomRef, progress] = useSmoothScrollProgress();
   const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
@@ -395,22 +383,21 @@ export default function Landing() {
   const navScrolled = useScrolled();
   const navPillClass = `landing-nav-pill${navScrolled ? " is-scrolled" : ""}${mobileNavOpen ? " is-open" : ""}`;
 
-  // Video zoom scale/radius: driven by the LIVE, bidirectional
-  // `progress` — this is the intended scroll-scrubbed zoom mechanic,
-  // reversing as you scroll up, which is correct and untouched.
+  // Video zoom scale/radius: driven by live `progress` — reverses as
+  // you scroll up, which is the correct, intended zoom mechanic.
   const eased = progress * progress * (3 - 2 * progress);
   const scale = 0.55 + eased * 0.7;
   const radius = 30 - eased * 10;
 
- const headingOpacity = Math.max(0, 1 - maxProgress / 0.5);
- const folderOpacity = 1 - Math.max(0, (maxProgress - 0.85) / 0.1);
-
-  // Reveal text (headline + stat cards + LinkedIn card): driven by
-  // `maxProgress`, the one-way high-water mark. Once fully revealed,
-  // it STAYS revealed even if the user scrolls back up within the
-  // section to reread it — no more disappearing text.
-  const textOpacity = Math.min(1, Math.max(0, (maxProgress - 0.82) / 0.18));
-  const wordRevealFraction = Math.max(0, Math.min(1, (maxProgress - 0.85) / 0.15));
+  // Heading + video fade, and the text/stat/LinkedIn-card reveal, are
+  // now BOTH driven by the same live `progress` value — a genuine
+  // crossfade that runs both ways. Scrolling down: video fades out as
+  // text fades in. Scrolling back up: text fades out as video fades
+  // back in. Neither side gets permanently "stuck" in one state.
+  const headingOpacity = Math.max(0, 1 - progress / 0.5);
+  const folderOpacity = 1 - Math.max(0, (progress - 0.85) / 0.1);
+  const textOpacity = Math.min(1, Math.max(0, (progress - 0.82) / 0.18));
+  const wordRevealFraction = Math.max(0, Math.min(1, (progress - 0.85) / 0.15));
   const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
