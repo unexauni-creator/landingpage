@@ -330,20 +330,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .landing-fan-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ══════════════════════════════════════════════════════════════════
-   Folder zoom-reveal section
-
-   DESKTOP: unchanged — pinned, scroll-driven zoom + crossfade.
-   MOBILE (<=900px, see media query below): the whole scroll-pinning
-   mechanic is disabled. .research-zoom-section becomes a normal,
-   non-pinned block (height:auto) and .research-zoom-sticky becomes a
-   plain static column — heading, then video (at its natural, larger
-   CSS size, no scale animation), then the reveal text/stats/card, all
-   stacked in normal flow. This removes both the growing-video
-   behavior and the huge blank scroll gap that came from the 220vh
-   pinned section height, and keeps text permanently visible since JS
-   now hard-codes textOpacity to 1 on mobile.
-   ══════════════════════════════════════════════════════════════════ */
+/* ── Folder zoom-reveal section ── */
 .research-zoom-section {
   position: relative;
   height: 220vh;
@@ -985,12 +972,6 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     background-attachment: scroll;
   }
 
-  /* THE FIX: entire scroll-pinned zoom mechanic is disabled here.
-     The section becomes a normal-height block, the sticky wrapper
-     becomes a plain static column, and .research-zoom-text becomes a
-     normal-flow child stacked after the heading+video instead of
-     absolutely overlaying it — everything renders once, in order,
-     no scroll math, no gap, no overlap. */
   .research-zoom-section {
     height: auto;
   }
@@ -998,11 +979,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     position: static;
     height: auto;
     overflow: visible;
-    padding: 56px 0 40px;
-    gap: 40px;
+    padding: 64px 0 56px;
+    gap: 56px;
   }
   .research-zoom-fade {
-    gap: 24px;
+    gap: 36px;
   }
   .research-zoom-heading {
     padding: 0 24px;
@@ -1015,6 +996,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   }
   .folder-visual {
     width: 90vw;
+  }
+  .folder-video-slot {
+    border-radius: 22px;
+  }
+  .folder-back {
+    border-radius: 26px;
   }
 
   .landing-nav-links,
@@ -1092,13 +1079,14 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     box-shadow: none;
   }
 
-  .research-zoom-sticky { padding: 40px 0 32px; gap: 32px; }
+  .research-zoom-sticky { padding: 52px 0 44px; gap: 44px; }
   .research-zoom-heading { padding: 0 24px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
   .folder-visual { width: 92vw; }
-  .folder-back { inset: -10px; }
-  .research-zoom-fade { gap: 16px; }
+  .folder-back { inset: -10px; border-radius: 24px; }
+  .folder-video-slot { border-radius: 20px; }
+  .research-zoom-fade { gap: 28px; }
 
   .research-zoom-text { padding: 0 18px; gap: 14px; align-items: center; }
   .research-zoom-main { align-items: center; gap: 18px; }

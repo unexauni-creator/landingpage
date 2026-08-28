@@ -137,10 +137,20 @@ const footerBottomRowVariants = {
   },
 };
 
-// Live, fully bidirectional scroll progress through the pinned
-// research-zoom section. Only used on DESKTOP now — on mobile, the
-// zoom/reveal scroll animation is fully bypassed (see isDesktop
-// checks below), so this hook's output is simply ignored there.
+// Mobile-only reveal variants for the static (non-pinned) research
+// section blocks — the heading, the video card, and the reveal text
+// column. Each fades in and rises slightly as it enters the viewport,
+// giving a smooth connecting transition between the stacked blocks
+// where before they simply appeared instantly.
+const mobileRevealVariants = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
 function useSmoothScrollProgress() {
   const sectionRef = useRef(null);
   const [smoothProgress, setSmoothProgress] = useState(0);
@@ -380,13 +390,6 @@ export default function Landing() {
   const navScrolled = useScrolled();
   const navPillClass = `landing-nav-pill${navScrolled ? " is-scrolled" : ""}${mobileNavOpen ? " is-open" : ""}`;
 
-  // ── Desktop: full scroll-driven zoom/crossfade, as before. ──
-  // ── Mobile: none of this scroll math applies. The video renders at
-  //    its natural (larger, CSS-controlled) size immediately, and the
-  //    heading + reveal text are simply always fully visible — no
-  //    fade tied to scroll position at all. This removes the "video
-  //    grows as I scroll" behavior and the "text disappears" behavior
-  //    on mobile entirely, as requested.
   const rawEased = progress * progress * (3 - 2 * progress);
   const scale = isDesktop ? 0.55 + rawEased * 0.7 : 1;
   const radius = isDesktop ? 30 - rawEased * 10 : 24;
@@ -402,7 +405,7 @@ export default function Landing() {
 
   const folderVisualStyle = isDesktop
     ? { transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }
-    : { opacity: 1 };
+    : { opacity: 1, borderRadius: "24px" };
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
   const videoStackHeight =
@@ -414,7 +417,6 @@ export default function Landing() {
     const video = researchVideoRef.current;
     if (!video) return;
 
-    // On mobile the video is always visible, so just keep it playing.
     if (!isDesktop) {
       if (video.paused) {
         video.play().catch(() => {});
@@ -471,6 +473,24 @@ export default function Landing() {
       </div>
     </>
   );
+
+  // Desktop: div (unchanged, opacity driven by scroll progress).
+  // Mobile: motion.div with whileInView, so each block smoothly fades
+  // and rises into place once, as it enters the viewport, instead of
+  // just appearing — the "connecting transition" between sections.
+  const HeadingWrap = isDesktop ? "div" : motion.div;
+  const FolderWrap = isDesktop ? "div" : motion.div;
+  const TextWrap = isDesktop ? "div" : motion.div;
+
+  const headingMobileProps = !isDesktop
+    ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.3 }, variants: mobileRevealVariants }
+    : {};
+  const folderMobileProps = !isDesktop
+    ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.2 }, variants: mobileRevealVariants }
+    : {};
+  const textMobileProps = !isDesktop
+    ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.15 }, variants: mobileRevealVariants }
+    : {};
 
   return (
     <div className="landing-page">
@@ -547,16 +567,16 @@ export default function Landing() {
       <section className="research-zoom-section" ref={zoomRef} id="research">
         <div className="research-zoom-sticky">
           <div className="research-zoom-fade">
-            <div className="research-zoom-heading" style={{ opacity: headingOpacity }}>
+            <HeadingWrap className="research-zoom-heading" style={{ opacity: headingOpacity }} {...headingMobileProps}>
               <div className="landing-hero-eyebrow research-eyebrow">User research</div>
               <h2 className="research-title">We asked. Students answered.</h2>
               <p className="research-sub">
                 Before building further, we ran a short survey with design & art students on LinkedIn
                 to understand what they actually struggle with when choosing a university.
               </p>
-            </div>
+            </HeadingWrap>
 
-            <div className="folder-visual" style={folderVisualStyle}>
+            <FolderWrap className="folder-visual" style={folderVisualStyle} {...folderMobileProps}>
               <div className="folder-back" />
               <div className="folder-video-slot">
                 <video
@@ -568,10 +588,10 @@ export default function Landing() {
                   playsInline
                 />
               </div>
-            </div>
+            </FolderWrap>
           </div>
 
-          <div className="research-zoom-text" style={{ opacity: textOpacity }}>
+          <TextWrap className="research-zoom-text" style={{ opacity: textOpacity }} {...textMobileProps}>
             <div className="research-zoom-main">
               <div className="research-zoom-copy">
                 <div className="landing-hero-eyebrow research-zoom-eyebrow">The biggest gap</div>
@@ -601,7 +621,7 @@ export default function Landing() {
                 View post <span className="linkedin-card-arrow" aria-hidden="true">↗</span>
               </span>
             </a>
-          </div>
+          </TextWrap>
         </div>
       </section>
 
