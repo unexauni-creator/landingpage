@@ -988,10 +988,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-heading {
     padding: 0 24px;
   }
-  .research-zoom-text {
+    .research-zoom-text {
     position: static;
     inset: auto;
-    padding: 0 18px;
+    padding: 40px 18px 0;
     pointer-events: auto;
   }
   .folder-visual {
@@ -1088,10 +1088,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .folder-video-slot { border-radius: 20px; }
   .research-zoom-fade { gap: 28px; }
 
-  .research-zoom-text { padding: 0 18px; gap: 14px; align-items: center; }
-  .research-zoom-main { align-items: center; gap: 18px; }
-  .research-zoom-copy { text-align: center; }
-  .research-zoom-desc { text-align: center; font-size: 14px; }
+  .research-zoom-text { padding: 40px 18px 0; gap: 14px; align-items: flex-start; }
+  .research-zoom-main { align-items: flex-start; gap: 18px; width: 100%; }
+  .research-zoom-copy { text-align: left; }
+  .research-zoom-desc { text-align: left; font-size: 14px; }
   .research-zoom-title { font-size: 24px; margin: 8px 0 10px; }
   .research-zoom-stats { flex-wrap: nowrap; justify-content: center; gap: 10px; }
   .research-zoom-stat-bar {
