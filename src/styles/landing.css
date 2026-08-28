@@ -39,7 +39,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   top: 0;
   left: 0;
   right: 0;
-  height: 220px;
+  height: 280px;
   z-index: 100;
   pointer-events: none;
 }
@@ -1050,8 +1050,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     height: 76px;
   }
 
-  .scroll-blur-stack {
-    height: 180px;
+    .scroll-blur-stack {
+    height: 220px;
   }
 
   .research-zoom-section {
@@ -1147,6 +1147,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 @media (max-width: 768px) {
   .landing-nav-spacer {
     height: 70px;
+  }
+
+  .scroll-blur-stack {
+    height: 200px;
   }
 
   .landing-hero { padding: 16px 20px 32px; }
