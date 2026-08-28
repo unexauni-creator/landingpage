@@ -962,6 +962,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     background-attachment: scroll;
   }
 
+  .research-zoom-sticky { padding-top: 88px; }
+
   .landing-nav-links,
   .landing-nav-cta {
     display: none;
@@ -1037,7 +1039,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     box-shadow: none;
   }
 
-  .research-zoom-sticky { padding-top: 20px; }
+  .research-zoom-sticky { padding-top: 88px; }
   .research-zoom-heading { padding: 0 24px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
@@ -1045,7 +1047,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .folder-back { inset: -10px; }
   .research-zoom-fade { gap: 16px; }
 
-  .research-zoom-text { padding: 0 18px; gap: 14px; align-items: center; }
+  .research-zoom-text { padding: 24px 18px 0; gap: 20px; align-items: center; }
   .research-zoom-main { align-items: center; gap: 18px; }
   .research-zoom-copy { text-align: center; }
   .research-zoom-desc { text-align: center; font-size: 14px; }
@@ -1131,4 +1133,4 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     padding: 18px;
   }
   .linkedin-card-name { font-size: 15px; }
-}
+}}
