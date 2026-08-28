@@ -330,7 +330,19 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
 .landing-fan-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── Folder zoom-reveal section ── */
+/* ══════════════════════════════════════════════════════════════════
+   Folder zoom-reveal section
+
+   .research-zoom-sticky now uses justify-content: center (was
+   flex-start). This is what fixes "the video grows from the bottom":
+   a CSS scale() transform always expands symmetrically around the
+   element's own center — but when that element sits pinned near the
+   very top of the viewport (flex-start), the upward half of its
+   growth gets clipped by the section's edge, so only the downward
+   half stays visible, reading as "growing from the bottom." Centering
+   the block gives it equal room above and below to grow into, so the
+   zoom now visibly expands from its true center in both directions.
+   ══════════════════════════════════════════════════════════════════ */
 .research-zoom-section {
   position: relative;
   height: 220vh;
@@ -344,7 +356,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   padding-top: 64px;
   background-color: #e2e0e0;
   background-image: var(--paper-texture, none);
@@ -421,6 +433,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   background: #2b1f18;
 }
 
+/* .research-zoom-text: top padding raised from 0 to 110px (desktop),
+   so this block — the "82% want clearer info..." headline, stat
+   cards, and LinkedIn card — always renders BELOW the sticky nav,
+   never underneath it. Previously with align-items:center and no top
+   clearance, tall content could render with its top edge hidden
+   behind the nav pill (the "THE BIGGES[T GAP]" clipping bug). */
 .research-zoom-text {
   position: absolute;
   inset: 0;
@@ -428,7 +446,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   align-items: center;
   justify-content: space-between;
   gap: 48px;
-  padding: 0 8vw;
+  padding: 110px 8vw 32px;
   pointer-events: none;
 }
 
@@ -1057,7 +1075,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .folder-back { inset: -10px; }
   .research-zoom-fade { gap: 16px; }
 
-  .research-zoom-text { padding: 16px 18px 0; gap: 14px; align-items: center; }
+  .research-zoom-text { padding: 104px 18px 20px; gap: 14px; align-items: center; }
   .research-zoom-main { align-items: center; gap: 18px; }
   .research-zoom-copy { text-align: center; }
   .research-zoom-desc { text-align: center; font-size: 14px; }

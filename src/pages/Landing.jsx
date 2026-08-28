@@ -24,20 +24,11 @@ const LINKEDIN_URL =
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
 // ── True stacked sticky-video scroll — UNCHANGED, do not touch ──
-// One pinned container (.process-video-pin) stays sticky for the
-// whole scroll length of the section. Each video is its own
-// absolutely-positioned layer with its own scroll-driven translateY.
-// Video 0 starts already in place. Video i (i>=1) starts pushed fully
-// below the frame and animates up during its dedicated segment, then
-// holds at a resting position offset by STACK_GAP px per layer, so a
-// thin sliver of every earlier card stays visible beneath the current
-// top card. Only the currently-active layer actually plays its video
-// — every other layer is paused, so a peeking sliver is a still frame.
-const STACK_TOP = 110;       // desktop: px offset where the video frame pins, clear of the nav
-const SEGMENT_VH = 180;      // vh of scroll dedicated to each video-to-video transition
-const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding before the next video starts sliding
-const TAIL_VH = 130;         // extra dwell after the last video locks — the cards stay visibly fixed here before the next section begins
-const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
+const STACK_TOP = 110;
+const SEGMENT_VH = 180;
+const DWELL_FRACTION = 0.5;
+const TAIL_VH = 130;
+const STACK_GAP = 22;
 
 function useIsDesktop(breakpoint = 900) {
   const [isDesktop, setIsDesktop] = useState(() =>
@@ -146,11 +137,24 @@ const footerBottomRowVariants = {
   },
 };
 
+// Tracks scroll progress through the pinned research-zoom section.
+// Returns BOTH the live, bidirectional `smoothProgress` (used to drive
+// the video zoom scale, which is meant to reverse as you scroll up —
+// that's the intended zoom mechanic) AND `maxProgress`, a one-way
+// "high-water mark" that only ever increases. Once the reveal text has
+// been fully shown (maxProgress reaches the reveal threshold), gently
+// scrolling back up within the section no longer hides it — maxProgress
+// stays at its peak, so the text stays visible. This eliminates the
+// "text disappears when I scroll up to reread it" behavior while
+// keeping the video zoom itself fully scroll-scrubbed in both
+// directions.
 function useSmoothScrollProgress() {
   const sectionRef = useRef(null);
   const [smoothProgress, setSmoothProgress] = useState(0);
+  const [maxProgress, setMaxProgress] = useState(0);
   const targetRef = useRef(0);
   const currentRef = useRef(0);
+  const maxRef = useRef(0);
   const rafRef = useRef(null);
 
   useEffect(() => {
@@ -174,6 +178,12 @@ function useSmoothScrollProgress() {
         currentRef.current = targetRef.current;
       }
       setSmoothProgress(currentRef.current);
+
+      if (currentRef.current > maxRef.current) {
+        maxRef.current = currentRef.current;
+        setMaxProgress(maxRef.current);
+      }
+
       rafRef.current = requestAnimationFrame(tick);
     }
 
@@ -192,7 +202,7 @@ function useSmoothScrollProgress() {
     };
   }, []);
 
-  return [sectionRef, smoothProgress];
+  return [sectionRef, smoothProgress, maxProgress];
 }
 
 function useDocScrollProgress() {
@@ -370,7 +380,7 @@ function NavLink({ item, isActive, onClick }) {
 }
 
 export default function Landing() {
-  const [zoomRef, progress] = useSmoothScrollProgress();
+  const [zoomRef, progress, maxProgress] = useSmoothScrollProgress();
   const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
@@ -385,24 +395,28 @@ export default function Landing() {
   const navScrolled = useScrolled();
   const navPillClass = `landing-nav-pill${navScrolled ? " is-scrolled" : ""}${mobileNavOpen ? " is-open" : ""}`;
 
+  // Video zoom scale/radius: driven by the LIVE, bidirectional
+  // `progress` — this is the intended scroll-scrubbed zoom mechanic,
+  // reversing as you scroll up, which is correct and untouched.
   const eased = progress * progress * (3 - 2 * progress);
   const scale = 0.55 + eased * 0.7;
   const radius = 30 - eased * 10;
 
   const headingOpacity = Math.max(0, 1 - progress / 0.5);
   const folderOpacity = 1 - Math.max(0, (progress - 0.85) / 0.1);
-  const textOpacity = Math.max(0, (progress - 0.93) / 0.07);
 
-  const wordRevealFraction = Math.max(0, Math.min(1, (progress - 0.91) / 0.09));
+  // Reveal text (headline + stat cards + LinkedIn card): driven by
+  // `maxProgress`, the one-way high-water mark. Once fully revealed,
+  // it STAYS revealed even if the user scrolls back up within the
+  // section to reread it — no more disappearing text.
+  const textOpacity = Math.min(1, Math.max(0, (maxProgress - 0.82) / 0.18));
+  const wordRevealFraction = Math.max(0, Math.min(1, (maxProgress - 0.85) / 0.15));
   const revealedWordCount = Math.round(wordRevealFraction * HEADLINE_WORDS.length);
 
   const activeProcessStep = PROCESS_STEPS[activeStep];
   const videoStackHeight =
     (PROCESS_STEPS.length - 1) * SEGMENT_VH + 100 + TAIL_VH;
 
-  // Only inject an inline `top` on desktop. On mobile/tablet, no
-  // inline style is applied at all — CSS media queries are the only
-  // thing controlling .process-video-pin's position there.
   const videoPinStyle = isDesktop ? { top: `${STACK_TOP}px` } : undefined;
 
   useEffect(() => {
@@ -419,8 +433,6 @@ export default function Landing() {
     }
   }, [progress]);
 
-  // Only the currently-active process step's video is allowed to play.
-  // UNCHANGED, do not touch.
   useEffect(() => {
     PROCESS_STEPS.forEach((step, i) => {
       const el = processVideoRefs.current[i];
@@ -444,10 +456,6 @@ export default function Landing() {
     setMobileNavOpen(false);
   }
 
-  // Text content, rendered TWICE in the DOM (desktop position + mobile
-  // position) and toggled with CSS display:none per breakpoint — see
-  // .process-sticky-col vs .process-mobile-text in landing.css. Kept
-  // as one shared JSX block so both stay in perfect sync content-wise.
   const processTextBlock = (
     <>
       <div className="landing-hero-eyebrow process-eyebrow">
@@ -599,8 +607,6 @@ export default function Landing() {
       </section>
 
       <section className="process-section" id="process">
-        {/* Desktop-only text column — separate sticky element, exactly
-            as before. Hidden on mobile via CSS (display:none). */}
         <div className="process-sticky-col">
           {processTextBlock}
         </div>
@@ -610,13 +616,6 @@ export default function Landing() {
           ref={videoStackRef}
           style={{ height: `${videoStackHeight}vh` }}
         >
-          {/* Mobile-only: text + video frames live inside ONE shared
-              sticky wrapper (.process-pin-mobile-group), so they can
-              never desync or overlap — there is only a single sticky
-              element to release. On desktop this wrapper is
-              display:contents (a no-op), so .process-video-pin
-              behaves as a direct sticky child of .process-video-stack,
-              exactly as it always has. */}
           <div className="process-pin-mobile-group">
             <div className="process-mobile-text">
               {processTextBlock}
