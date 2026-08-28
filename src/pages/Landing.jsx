@@ -23,7 +23,7 @@ const LINKEDIN_URL =
 
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
-// ── True stacked sticky-video scroll ──
+// ── True stacked sticky-video scroll — UNCHANGED, do not touch ──
 // One pinned container (.process-video-pin) stays sticky for the
 // whole scroll length of the section. Each video is its own
 // absolutely-positioned layer with its own scroll-driven translateY.
@@ -260,12 +260,7 @@ function GapStat({ label, value, start, delay }) {
   );
 }
 
-// Drives the whole video-stack effect. Computes, on every scroll tick:
-//  - layerProgress[i]: 0→1 for how far video i has travelled into its
-//    locked position (used for translateY on each video layer)
-//  - activeIndex: which video is currently "on top" — used both to
-//    drive the text column, and to decide which single video layer is
-//    allowed to actually play (see the play/pause effect below)
+// Drives the whole video-stack effect — UNCHANGED, do not touch.
 function useVideoStack(count) {
   const wrapperRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -425,9 +420,7 @@ export default function Landing() {
   }, [progress]);
 
   // Only the currently-active process step's video is allowed to play.
-  // Every other video layer is paused (and rewound), so any peeking
-  // sliver visible underneath the top card is a still frame — never a
-  // second or third video visibly playing at the same time.
+  // UNCHANGED, do not touch.
   useEffect(() => {
     PROCESS_STEPS.forEach((step, i) => {
       const el = processVideoRefs.current[i];
@@ -450,6 +443,27 @@ export default function Landing() {
   function closeMobileNav() {
     setMobileNavOpen(false);
   }
+
+  // Text content, rendered TWICE in the DOM (desktop position + mobile
+  // position) and toggled with CSS display:none per breakpoint — see
+  // .process-sticky-col vs .process-mobile-text in landing.css. Kept
+  // as one shared JSX block so both stay in perfect sync content-wise.
+  const processTextBlock = (
+    <>
+      <div className="landing-hero-eyebrow process-eyebrow">
+        Our process <span className="process-step-count">{activeStep + 1} / {PROCESS_STEPS.length}</span>
+      </div>
+      <div key={activeStep} className="process-active-text">
+        <h2 className="process-title">{activeProcessStep.title}</h2>
+        <p className="process-desc">{activeProcessStep.text}</p>
+      </div>
+      <div className="process-progress">
+        {PROCESS_STEPS.map((s, i) => (
+          <span key={s.key} className={`process-progress-dot${i === activeStep ? " is-active" : ""}`} />
+        ))}
+      </div>
+    </>
+  );
 
   return (
     <div className="landing-page">
@@ -585,19 +599,10 @@ export default function Landing() {
       </section>
 
       <section className="process-section" id="process">
+        {/* Desktop-only text column — separate sticky element, exactly
+            as before. Hidden on mobile via CSS (display:none). */}
         <div className="process-sticky-col">
-          <div className="landing-hero-eyebrow process-eyebrow">
-            Our process <span className="process-step-count">{activeStep + 1} / {PROCESS_STEPS.length}</span>
-          </div>
-          <div key={activeStep} className="process-active-text">
-            <h2 className="process-title">{activeProcessStep.title}</h2>
-            <p className="process-desc">{activeProcessStep.text}</p>
-          </div>
-          <div className="process-progress">
-            {PROCESS_STEPS.map((s, i) => (
-              <span key={s.key} className={`process-progress-dot${i === activeStep ? " is-active" : ""}`} />
-            ))}
-          </div>
+          {processTextBlock}
         </div>
 
         <div
@@ -605,32 +610,45 @@ export default function Landing() {
           ref={videoStackRef}
           style={{ height: `${videoStackHeight}vh` }}
         >
-          <div className="process-video-pin" style={videoPinStyle}>
-            {PROCESS_STEPS.map((step, i) => {
-              const p = layerProgress[i] ?? (i === 0 ? 1 : 0);
-              const restOffset = i * STACK_GAP;
-              const translateY = `calc(${(1 - p) * 100}% + ${restOffset}px)`;
-              return (
-                <div
-                  key={step.key}
-                  className="process-video-frame"
-                  style={{ zIndex: i + 1, transform: `translateY(${translateY})` }}
-                >
-                  {step.type === "video" ? (
-                    <video
-                      className="process-video-el"
-                      src={step.src}
-                      ref={(el) => (processVideoRefs.current[i] = el)}
-                      muted
-                      loop
-                      playsInline
-                    />
-                  ) : (
-                    <img className="process-video-el" src={step.src} alt={step.title} />
-                  )}
-                </div>
-              );
-            })}
+          {/* Mobile-only: text + video frames live inside ONE shared
+              sticky wrapper (.process-pin-mobile-group), so they can
+              never desync or overlap — there is only a single sticky
+              element to release. On desktop this wrapper is
+              display:contents (a no-op), so .process-video-pin
+              behaves as a direct sticky child of .process-video-stack,
+              exactly as it always has. */}
+          <div className="process-pin-mobile-group">
+            <div className="process-mobile-text">
+              {processTextBlock}
+            </div>
+
+            <div className="process-video-pin" style={videoPinStyle}>
+              {PROCESS_STEPS.map((step, i) => {
+                const p = layerProgress[i] ?? (i === 0 ? 1 : 0);
+                const restOffset = i * STACK_GAP;
+                const translateY = `calc(${(1 - p) * 100}% + ${restOffset}px)`;
+                return (
+                  <div
+                    key={step.key}
+                    className="process-video-frame"
+                    style={{ zIndex: i + 1, transform: `translateY(${translateY})` }}
+                  >
+                    {step.type === "video" ? (
+                      <video
+                        className="process-video-el"
+                        src={step.src}
+                        ref={(el) => (processVideoRefs.current[i] = el)}
+                        muted
+                        loop
+                        playsInline
+                      />
+                    ) : (
+                      <img className="process-video-el" src={step.src} alt={step.title} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

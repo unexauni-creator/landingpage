@@ -555,25 +555,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   Process section
-
-   Desktop (>900px): text column is sticky, pinned alongside the
-   sticky video stack, unchanged from before.
-
-   Mobile/tablet (<=900px): text column is sticky as before (so it
-   remains visible while the first two cards dwell/scroll into
-   place), but its exit is driven directly in JS by the LAST card's
-   own scroll progress (layerProgress at index count-1, see
-   Landing.jsx) via an inline transform: translateY — not by relying
-   on when the underlying sticky container happens to release. This
-   guarantees the text is provably stationary while the last card is
-   still off-screen/dwelling, then moves upward in exact lockstep as
-   the last card slides into place, finishing its exit at the same
-   moment the card finishes locking.
-
-   Video cards carry no caption/label overlay — plain video frames
-   only. The "Our process" heading, title, and description live
-   entirely in .process-sticky-col.
+   Process section — DESKTOP (>900px): unchanged from before. Two
+   independent grid columns, each with its own sticky element (text
+   column left, video stack right). This part was never buggy, so it
+   is left byte-for-byte the same as it has always been.
    ══════════════════════════════════════════════════════════════════ */
 .process-section {
   position: relative;
@@ -660,6 +645,24 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 .process-video-stack {
   position: relative;
   z-index: 5;
+}
+
+/* Mobile-only wrapper: display:contents makes it structurally
+   invisible on desktop (its children — .process-mobile-text and
+   .process-video-pin — act as if they were direct children of
+   .process-video-stack, so desktop's layout is completely
+   unaffected). On mobile it becomes the single sticky element — see
+   the media query below. */
+.process-pin-mobile-group {
+  display: contents;
+}
+
+/* Hidden on desktop; only becomes visible inside the mobile media
+   query below. This is the mobile-only duplicate of the text block,
+   living inside the same sticky context as the video frames so they
+   can never desync. */
+.process-mobile-text {
+  display: none;
 }
 
 .process-video-pin {
@@ -956,12 +959,23 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .hey-lead, .hey-body p { max-width: 100%; }
 }
 
-/* ══════════════ Mobile / Tablet ══════════════
-   .process-sticky-col stays sticky here (keeps text visible while
-   cards 1 & 2 dwell/scroll). Its EXIT motion is driven entirely by
-   the inline transform set in Landing.jsx from the last card's own
-   layerProgress. The base `transform: none` here is just the resting
-   state before that JS-driven exit kicks in. */
+/* ══════════════════════════════════════════════════════════════════
+   Process section — MOBILE / TABLET (<=900px)
+
+   THE FIX: .process-pin-mobile-group becomes THE ONLY sticky element
+   for text+video on mobile. It contains .process-mobile-text (plain,
+   normal-flow text) followed by .process-video-pin (now position:
+   static — it is no longer sticky itself; its child video frames are
+   still absolutely positioned exactly as before, now anchored to
+   .process-video-pin's own top:0, which sits directly below the text
+   block in normal flow). Because there is exactly ONE sticky element
+   instead of two independently-timed ones, text and video are
+   physically incapable of desyncing or overlapping — they release
+   together, at the same scroll position, every time.
+
+   The desktop .process-sticky-col is hidden here (display:none) since
+   .process-mobile-text is now showing the same content in its place.
+   ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .landing-page {
     background-attachment: scroll;
@@ -987,30 +1001,37 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     gap: 0;
     padding-top: 130px;
   }
+
+  /* Hide the desktop text column entirely on mobile. */
   .process-sticky-col {
+    display: none;
+  }
+
+  .process-pin-mobile-group {
+    display: flex;
+    flex-direction: column;
     position: sticky;
     top: 84px;
-    transform: none;
-    background: transparent;
-    box-shadow: none;
-    padding: 20px 4px 0;
+    z-index: 20;
+    gap: 16px;
+  }
+
+  .process-mobile-text {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    height: 210px;
-    overflow: hidden;
-    transition: transform 0.12s linear;
-    will-change: transform;
+    padding: 0 4px;
   }
-  .process-title { font-size: 21px; line-height: 1.22; }
-  .process-desc {
-    font-size: 13.5px;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .process-mobile-text .process-title { font-size: 21px; line-height: 1.22; }
+  .process-mobile-text .process-desc { font-size: 13.5px; line-height: 1.5; }
+
   .process-video-stack { margin-top: 0; }
-  .process-video-pin { top: 294px; height: 46vh; }
+
+  .process-video-pin {
+    position: static;
+    height: 46vh;
+    display: block;
+  }
   .process-video-frame { max-height: 46vh; aspect-ratio: 4 / 3; }
 }
 
@@ -1067,10 +1088,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
 
   .process-section { padding-top: 110px; }
-  .process-sticky-col { top: 76px; padding-top: 16px; height: 188px; }
-  .process-title { font-size: 19px; }
-  .process-desc { font-size: 12.5px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 264px; height: 42vh; }
+  .process-pin-mobile-group { top: 76px; }
+  .process-mobile-text { padding-top: 16px; }
+  .process-mobile-text .process-title { font-size: 19px; }
+  .process-mobile-text .process-desc { font-size: 12.5px; }
+  .process-video-pin { height: 42vh; }
   .process-video-frame { max-height: 42vh; }
 
   .hey-section { margin-top: 90px; padding: 56px 16px; }
@@ -1114,10 +1136,10 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-stat-value { font-size: 19px; }
 
   .process-section { padding-top: 100px; }
-  .process-sticky-col { top: 70px; height: 172px; }
-  .process-title { font-size: 18px; }
-  .process-desc { font-size: 12px; -webkit-line-clamp: 3; }
-  .process-video-pin { top: 244px; height: 40vh; }
+  .process-pin-mobile-group { top: 70px; }
+  .process-mobile-text .process-title { font-size: 18px; }
+  .process-mobile-text .process-desc { font-size: 12px; }
+  .process-video-pin { height: 40vh; }
   .process-video-frame { max-height: 40vh; }
 
   .linkedin-card {
