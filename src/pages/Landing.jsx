@@ -23,7 +23,6 @@ const LINKEDIN_URL =
 
 const LINKEDIN_COMPANY_URL = "https://www.linkedin.com/company/unexauni/?viewAsMember=true";
 
-// ── True stacked sticky-video scroll — UNCHANGED, do not touch ──
 const STACK_TOP = 110;
 const SEGMENT_VH = 180;
 const DWELL_FRACTION = 0.5;
@@ -137,9 +136,6 @@ const footerBottomRowVariants = {
   },
 };
 
-// Mobile-only reveal variants for the static (non-pinned) research
-// section blocks — the heading and the video card. Each fades in and
-// rises slightly as it enters the viewport.
 const mobileRevealVariants = {
   hidden: { opacity: 0, y: 28 },
   visible: {
@@ -263,11 +259,6 @@ function GapStat({ label, value, start, delay }) {
   );
 }
 
-// Drives the word-by-word headline reveal on mobile once triggered
-// (see mobileStatsInView) — steps revealedWordCount up from 0 to the
-// full word count over a short interval, matching the desktop
-// scroll-scrubbed reveal's pacing but time-based instead of
-// scroll-based, since mobile no longer has the pinned scroll rig.
 function useMobileWordReveal(totalWords, active) {
   const [count, setCount] = useState(0);
 
@@ -285,7 +276,6 @@ function useMobileWordReveal(totalWords, active) {
   return count;
 }
 
-// Drives the whole video-stack effect — UNCHANGED, do not touch.
 function useVideoStack(count) {
   const wrapperRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -418,9 +408,6 @@ export default function Landing() {
   const folderOpacity = isDesktop ? 1 - Math.max(0, (progress - 0.85) / 0.1) : 1;
   const textOpacity = isDesktop ? Math.min(1, Math.max(0, (progress - 0.82) / 0.18)) : 1;
 
-  // Mobile word reveal: driven by the time-based hook, triggered once
-  // the reveal block scrolls into view (mobileStatsInView), instead of
-  // being instantly fully revealed.
   const mobileWordCount = useMobileWordReveal(HEADLINE_WORDS.length, mobileStatsInView);
   const wordRevealFraction = isDesktop
     ? Math.max(0, Math.min(1, (progress - 0.85) / 0.15))
@@ -475,6 +462,19 @@ export default function Landing() {
     });
   }, [activeStep]);
 
+  // Lock page scroll while the mobile nav overlay is open, so the
+  // background can't be scrolled behind the blurred overlay.
+  useEffect(() => {
+    if (mobileNavOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileNavOpen]);
+
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -500,9 +500,6 @@ export default function Landing() {
     </>
   );
 
-  // Desktop: div (unchanged, opacity driven by scroll progress).
-  // Mobile: motion.div using whileInView, so each block smoothly
-  // fades and rises into place once as it enters the viewport.
   const HeadingWrap = isDesktop ? "div" : motion.div;
   const FolderWrap = isDesktop ? "div" : motion.div;
   const TextWrap = isDesktop ? "div" : motion.div;
@@ -513,11 +510,6 @@ export default function Landing() {
   const folderMobileProps = !isDesktop
     ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.2 }, variants: mobileRevealVariants }
     : {};
-  // Text block: on mobile this is where the word-reveal + count-up
-  // animation gets triggered — onViewportEnter fires once, flipping
-  // mobileStatsInView to true, which kicks off both the headline
-  // word-by-word reveal and the GapStat count-up numbers, exactly
-  // like the desktop scroll-driven version but time-based.
   const textMobileProps = !isDesktop
     ? {
         initial: "hidden",
@@ -581,6 +573,16 @@ export default function Landing() {
           </div>
         </div>
       </header>
+
+      {/* Full-page blurred overlay shown only while the mobile nav
+          dropdown is open. Sits below the nav (z-index) so the pill
+          and dropdown stay crisp, but blurs/dims everything behind
+          them. Tapping it closes the menu. */}
+      <div
+        className={`landing-nav-overlay${mobileNavOpen ? " is-open" : ""}`}
+        onClick={closeMobileNav}
+        aria-hidden="true"
+      />
 
       <section className="landing-hero" id="showcase">
         <h1 className="landing-hero-title">
