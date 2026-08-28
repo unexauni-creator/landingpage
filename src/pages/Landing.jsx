@@ -138,10 +138,8 @@ const footerBottomRowVariants = {
 };
 
 // Mobile-only reveal variants for the static (non-pinned) research
-// section blocks — the heading, the video card, and the reveal text
-// column. Each fades in and rises slightly as it enters the viewport,
-// giving a smooth connecting transition between the stacked blocks
-// where before they simply appeared instantly.
+// section blocks — the heading and the video card. Each fades in and
+// rises slightly as it enters the viewport.
 const mobileRevealVariants = {
   hidden: { opacity: 0, y: 28 },
   visible: {
@@ -265,6 +263,28 @@ function GapStat({ label, value, start, delay }) {
   );
 }
 
+// Drives the word-by-word headline reveal on mobile once triggered
+// (see mobileStatsInView) — steps revealedWordCount up from 0 to the
+// full word count over a short interval, matching the desktop
+// scroll-scrubbed reveal's pacing but time-based instead of
+// scroll-based, since mobile no longer has the pinned scroll rig.
+function useMobileWordReveal(totalWords, active) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i += 1;
+      setCount(i);
+      if (i >= totalWords) clearInterval(interval);
+    }, 90);
+    return () => clearInterval(interval);
+  }, [active, totalWords]);
+
+  return count;
+}
+
 // Drives the whole video-stack effect — UNCHANGED, do not touch.
 function useVideoStack(count) {
   const wrapperRef = useRef(null);
@@ -379,6 +399,7 @@ export default function Landing() {
   const [zoomRef, progress] = useSmoothScrollProgress();
   const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileStatsInView, setMobileStatsInView] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
   const processVideoRefs = useRef([]);
@@ -396,12 +417,17 @@ export default function Landing() {
   const headingOpacity = isDesktop ? Math.max(0, 1 - progress / 0.5) : 1;
   const folderOpacity = isDesktop ? 1 - Math.max(0, (progress - 0.85) / 0.1) : 1;
   const textOpacity = isDesktop ? Math.min(1, Math.max(0, (progress - 0.82) / 0.18)) : 1;
+
+  // Mobile word reveal: driven by the time-based hook, triggered once
+  // the reveal block scrolls into view (mobileStatsInView), instead of
+  // being instantly fully revealed.
+  const mobileWordCount = useMobileWordReveal(HEADLINE_WORDS.length, mobileStatsInView);
   const wordRevealFraction = isDesktop
     ? Math.max(0, Math.min(1, (progress - 0.85) / 0.15))
     : 1;
   const revealedWordCount = isDesktop
     ? Math.round(wordRevealFraction * HEADLINE_WORDS.length)
-    : HEADLINE_WORDS.length;
+    : mobileWordCount;
 
   const folderVisualStyle = isDesktop
     ? { transform: `scale(${scale})`, borderRadius: `${radius}px`, opacity: folderOpacity }
@@ -475,9 +501,8 @@ export default function Landing() {
   );
 
   // Desktop: div (unchanged, opacity driven by scroll progress).
-  // Mobile: motion.div with whileInView, so each block smoothly fades
-  // and rises into place once, as it enters the viewport, instead of
-  // just appearing — the "connecting transition" between sections.
+  // Mobile: motion.div using whileInView, so each block smoothly
+  // fades and rises into place once as it enters the viewport.
   const HeadingWrap = isDesktop ? "div" : motion.div;
   const FolderWrap = isDesktop ? "div" : motion.div;
   const TextWrap = isDesktop ? "div" : motion.div;
@@ -488,9 +513,22 @@ export default function Landing() {
   const folderMobileProps = !isDesktop
     ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.2 }, variants: mobileRevealVariants }
     : {};
+  // Text block: on mobile this is where the word-reveal + count-up
+  // animation gets triggered — onViewportEnter fires once, flipping
+  // mobileStatsInView to true, which kicks off both the headline
+  // word-by-word reveal and the GapStat count-up numbers, exactly
+  // like the desktop scroll-driven version but time-based.
   const textMobileProps = !isDesktop
-    ? { initial: "hidden", whileInView: "visible", viewport: { once: true, amount: 0.15 }, variants: mobileRevealVariants }
+    ? {
+        initial: "hidden",
+        whileInView: "visible",
+        viewport: { once: true, amount: 0.15 },
+        variants: mobileRevealVariants,
+        onViewportEnter: () => setMobileStatsInView(true),
+      }
     : {};
+
+  const statsShouldStart = isDesktop ? textOpacity > 0.05 : mobileStatsInView;
 
   return (
     <div className="landing-page">
@@ -610,7 +648,7 @@ export default function Landing() {
 
               <div className="research-zoom-stats">
                 {GAP_STATS.map((s, i) => (
-                  <GapStat key={s.label} label={s.label} value={s.value} start={textOpacity > 0.05} delay={i * 220} />
+                  <GapStat key={s.label} label={s.label} value={s.value} start={statsShouldStart} delay={i * 220} />
                 ))}
               </div>
             </div>

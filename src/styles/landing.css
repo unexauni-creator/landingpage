@@ -980,7 +980,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     height: auto;
     overflow: visible;
     padding: 64px 0 56px;
-    gap: 56px;
+    gap: 76px;
   }
   .research-zoom-fade {
     gap: 36px;
@@ -1079,7 +1079,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
     box-shadow: none;
   }
 
-  .research-zoom-sticky { padding: 52px 0 44px; gap: 44px; }
+  .research-zoom-sticky { padding: 52px 0 44px; gap: 60px; }
   .research-zoom-heading { padding: 0 24px; }
   .research-title { font-size: 24px; }
   .research-sub { font-size: 13px; }
