@@ -340,7 +340,8 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -486,7 +487,7 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 16px;
+  padding: 28px 16px;
   transition: height 0.4s var(--ease-premium);
 }
 
@@ -1094,11 +1095,11 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   .research-zoom-desc { text-align: left; font-size: 14px; }
   .research-zoom-title { font-size: 24px; margin: 8px 0 10px; }
   .research-zoom-stats { flex-wrap: nowrap; justify-content: center; gap: 10px; }
-  .research-zoom-stat-bar {
+    .research-zoom-stat-bar {
     width: 28vw;
     max-width: 105px;
-    height: 78px !important;
-    padding: 8px 6px;
+    height: 108px !important;
+    padding: 14px 6px;
     border-radius: 14px;
   }
   .research-zoom-stat-label { font-size: 10.5px; }
@@ -1158,9 +1159,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 }
 
 @media (max-width: 480px) {
-  .research-zoom-stat-bar {
-    height: 68px !important;
-    padding: 6px 5px;
+    .research-zoom-stat-bar {
+    height: 94px !important;
+    padding: 12px 5px;
   }
   .research-zoom-stat-value { font-size: 17px; }
 
