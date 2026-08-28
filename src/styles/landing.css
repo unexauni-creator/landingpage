@@ -512,18 +512,20 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
   flex-shrink: 0;
   position: relative;
   width: 340px;
-  height: 340px;
+  min-height: 340px;
+  height: auto;
   border: none;
   border-radius: 24px;
   overflow: hidden;
   background-image:
-    linear-gradient(to top, rgba(20, 14, 10, 0.65) 0%, rgba(20, 14, 10, 0.05) 40%, rgba(20, 14, 10, 0.45) 100%),
+    linear-gradient(to top, rgba(20, 14, 10, 0.72) 0%, rgba(20, 14, 10, 0.15) 45%, rgba(20, 14, 10, 0.5) 100%),
     url("/unexapost.png");
   background-size: cover;
   background-position: center;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 24px;
   padding: 22px;
   text-decoration: none;
   box-shadow: none;
@@ -1065,10 +1067,12 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .linkedin-card {
     width: min(320px, 84vw);
-    aspect-ratio: 1 / 1;
+    min-height: 320px;
     height: auto;
+    aspect-ratio: auto;
     max-width: 320px;
     padding: 22px;
+    gap: 20px;
   }
   .linkedin-card-name { font-size: 16px; }
   .linkedin-card-cta { font-size: 12.5px; padding: 8px 14px; }
@@ -1130,7 +1134,9 @@ html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100%; overfl
 
   .linkedin-card {
     width: min(280px, 88vw);
+    min-height: 300px;
     padding: 18px;
+    gap: 18px;
   }
   .linkedin-card-name { font-size: 15px; }
 }
