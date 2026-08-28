@@ -39,14 +39,17 @@ const DWELL_FRACTION = 0.5;  // portion of each segment spent fully holding befo
 const TAIL_VH = 130;         // extra dwell after the last video locks — the cards stay visibly fixed here before the next section begins
 const STACK_GAP = 22;        // px offset per stacked layer, so earlier cards stay visibly peeking out
 
-// Mobile-only: how far (px) the text column travels upward, driven
-// DIRECTLY by the last card's own scroll progress (layerProgress at
-// index count-1) — not by native sticky-release timing. This
-// guarantees text is provably stationary while the last card is
-// off-screen or dwelling, then moves in perfect lockstep with it as
-// it slides up and locks, finishing its exit at the exact moment the
-// card finishes locking.
+// Mobile-only: how far (px) the text column travels upward once it
+// finally starts exiting. Driven by tailProgress (see useVideoStack)
+// — the scroll that happens AFTER the last card has fully locked,
+// during the TAIL_VH dwell — not by the card's own arrival progress.
+// This keeps text completely stationary through the card's entire
+// arrival AND while it sits locked at the top; text only starts
+// moving once the user keeps scrolling past that point, and finishes
+// its exit by the time the dwell ends and the section releases into
+// the Team section.
 const MOBILE_TEXT_EXIT_DISTANCE = 340;
+const TEXT_EXIT_TAIL_FRACTION = 0.6; // portion of the tail dwell consumed by the text's exit motion
 
 function useIsDesktop(breakpoint = 900) {
   const [isDesktop, setIsDesktop] = useState(() =>
@@ -271,18 +274,21 @@ function GapStat({ label, value, start, delay }) {
 
 // Drives the whole video-stack effect. Computes, on every scroll tick:
 //  - layerProgress[i]: 0→1 for how far video i has travelled into its
-//    locked position (used for translateY on each video layer AND,
-//    on mobile, to drive the text column's exit translateY in sync
-//    with the last card)
+//    locked position (used for translateY on each video layer)
 //  - activeIndex: which video is currently "on top" — used both to
 //    drive the text column, and to decide which single video layer is
 //    allowed to actually play (see the play/pause effect below)
+//  - tailProgress: 0→1 for how far scroll has advanced through the
+//    TAIL_VH dwell period AFTER the last card has fully locked (stays
+//    at 0 for the entire time any card is still arriving). This is
+//    what drives the mobile text column's exit — see mobileTextExitStyle.
 function useVideoStack(count) {
   const wrapperRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [layerProgress, setLayerProgress] = useState(() =>
     Array.from({ length: count }, (_, i) => (i === 0 ? 1 : 0))
   );
+  const [tailProgress, setTailProgress] = useState(0);
 
   useEffect(() => {
     function update() {
@@ -306,6 +312,14 @@ function useVideoStack(count) {
         if (progress[i] > 0.5) idx = i;
       }
       setActiveIndex(idx);
+
+      // Total scroll consumed by all card-to-card segments — once
+      // scroll goes past this point, every card has fully locked and
+      // we're in the TAIL_VH dwell region.
+      const allSegmentsPx = (count - 1) * segmentPx;
+      const tailPx = (window.innerHeight * TAIL_VH) / 100;
+      const tailRaw = tailPx > 0 ? (scrolled - allSegmentsPx) / tailPx : 0;
+      setTailProgress(Math.max(0, Math.min(1, tailRaw)));
     }
 
     update();
@@ -320,7 +334,7 @@ function useVideoStack(count) {
     };
   }, [count]);
 
-  return [wrapperRef, activeIndex, layerProgress];
+  return [wrapperRef, activeIndex, layerProgress, tailProgress];
 }
 
 function useActiveSection(ids) {
@@ -387,7 +401,7 @@ function NavLink({ item, isActive, onClick }) {
 
 export default function Landing() {
   const [zoomRef, progress] = useSmoothScrollProgress();
-  const [videoStackRef, activeStep, layerProgress] = useVideoStack(PROCESS_STEPS.length);
+  const [videoStackRef, activeStep, layerProgress, tailProgress] = useVideoStack(PROCESS_STEPS.length);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const docProgress = useDocScrollProgress();
   const researchVideoRef = useRef(null);
@@ -421,23 +435,16 @@ export default function Landing() {
   // thing controlling .process-video-pin's position there.
   const videoPinStyle = isDesktop ? { top: `${STACK_TOP}px` } : undefined;
 
-   // The text column's mobile exit motion is driven directly by the
-  // LAST card's own layerProgress, but the exit only STARTS once that
-  // card is almost fully locked (past TEXT_EXIT_START_THRESHOLD).
-  // This keeps text completely stationary while card 3 visibly slides
-  // in and settles — matching "text stays while I'm watching the
-  // card arrive" — and only moves it away in the final sliver of
-  // scroll once the card has essentially finished locking, right
-  // before the section releases into the Team section.
-  const lastStepIndex = PROCESS_STEPS.length - 1;
-  const lastCardProgress = layerProgress[lastStepIndex] ?? (lastStepIndex === 0 ? 1 : 0);
-  const TEXT_EXIT_START_THRESHOLD = 0.9;
-  const exitT = Math.max(
-    0,
-    (lastCardProgress - TEXT_EXIT_START_THRESHOLD) / (1 - TEXT_EXIT_START_THRESHOLD)
-  );
+  // The text column's mobile exit is driven by tailProgress — scroll
+  // that happens AFTER the last card has fully locked — not by the
+  // card's own arrival. Text stays completely still through the
+  // card's entire arrival and while it's locked at rest; it only
+  // starts moving once the user keeps scrolling into the dwell
+  // period, and finishes exiting within the first
+  // TEXT_EXIT_TAIL_FRACTION portion of that dwell.
+  const textExitT = Math.min(1, tailProgress / TEXT_EXIT_TAIL_FRACTION);
   const mobileTextExitStyle = !isDesktop
-    ? { transform: `translateY(-${Math.round(exitT * MOBILE_TEXT_EXIT_DISTANCE)}px)` }
+    ? { transform: `translateY(-${Math.round(textExitT * MOBILE_TEXT_EXIT_DISTANCE)}px)` }
     : undefined;
 
   useEffect(() => {
